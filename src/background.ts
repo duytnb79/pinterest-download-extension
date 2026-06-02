@@ -42,14 +42,76 @@ function getSafeFilename(url: string, id: string, type: 'video' | 'image'): stri
 }
 
 // Khởi chạy tải xuống một CartItem
-// Fetch trang chi tiết Pin ngầm và trích xuất URL video .mp4 chất lượng cao nhất bằng 3 lớp kiên cố
+// Kiểm tra xem một URL có thực sự khả dụng và không phải là trang lỗi XML của Amazon S3
+async function checkUrlValidity(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    if (!res.ok) return false;
+    
+    const contentType = res.headers.get('content-type') || '';
+    // Nếu máy chủ trả về XML (như Access Denied của S3), đó là URL lỗi
+    if (contentType.toLowerCase().includes('xml')) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Tạo danh sách các URL ứng viên từ luồng HLS m3u8 để thử nghiệm độ phân giải và định dạng
+function getMp4CandidatesFromHls(hlsUrl: string): string[] {
+  const candidates: string[] = [];
+  try {
+    // 1. Dạng expMp4 HD 720p mới nhất (ví dụ: .../expMp4/..._720w.mp4)
+    if (hlsUrl.includes('/hls/')) {
+      const expMp4 = hlsUrl.replace('/hls/', '/expMp4/').replace('.m3u8', '_720w.mp4');
+      candidates.push(expMp4);
+    }
+    
+    // 2. Dạng 720p HD thông thường (ví dụ: .../720p/... .mp4)
+    const p720 = hlsUrl.replace('/hls/', '/720p/').replace('.m3u8', '.mp4');
+    candidates.push(p720);
+    
+    // 3. Dạng h264 chất lượng trung bình (ví dụ: .../h264/... .mp4)
+    const h264 = hlsUrl.replace('/hls/', '/h264/').replace('.m3u8', '.mp4');
+    candidates.push(h264);
+  } catch (e) {}
+  return candidates;
+}
+
+// Fetch trang chi tiết Pin ngầm và trích xuất URL video .mp4 chất lượng cao nhất bằng 6 lớp kiên cố kết hợp kiểm tra tính khả dụng HEAD
 async function extractMp4FromPinPage(pinId: string, fallbackUrl: string): Promise<string> {
   try {
     const pageUrl = `https://www.pinterest.com/pin/${pinId}/`;
-    const response = await fetch(pageUrl);
-    if (!response.ok) return fallbackUrl;
+    
+    // Fetch kèm cookie của người dùng đang đăng nhập (credentials: 'include') và giả lập headers trình duyệt thực
+    const response = await fetch(pageUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'vi,en-US;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1'
+      },
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      console.warn(`[video-ext] Fetch Pin ${pinId} thất bại với status: ${response.status}`);
+      return fallbackUrl;
+    }
     
     const html = await response.text();
+    const potentialUrls: string[] = [];
     
     // Cách 1: Parse tag script __PWS_DATA__ (chính xác và an toàn nhất)
     const scriptMatch = html.match(/<script id="__PWS_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
@@ -59,10 +121,16 @@ async function extractMp4FromPinPage(pinId: string, fallbackUrl: string): Promis
         const pinData = jsonData?.props?.initialReduxState?.pins?.[pinId];
         if (pinData?.videos?.video_list) {
           const videoList = pinData.videos.video_list;
-          const bestVideo = videoList.V_720P?.url || videoList.V_H264?.url || videoList.V_720p?.url || videoList.V_H264_IPHONE?.url;
-          if (bestVideo) {
-            console.log(`[video-ext] Tìm thấy video MP4 chất lượng cao từ JSON: ${bestVideo}`);
-            return bestVideo;
+          
+          // Thêm các link MP4 trực tiếp vào danh sách thử nghiệm
+          if (videoList.V_720P?.url) potentialUrls.push(videoList.V_720P.url);
+          if (videoList.V_H264?.url) potentialUrls.push(videoList.V_H264.url);
+          if (videoList.V_720p?.url) potentialUrls.push(videoList.V_720p.url);
+          if (videoList.V_H264_IPHONE?.url) potentialUrls.push(videoList.V_H264_IPHONE.url);
+          
+          // Lấy HLS và tạo danh sách convert
+          if (videoList.V_HLS?.url) {
+            potentialUrls.push(...getMp4CandidatesFromHls(videoList.V_HLS.url));
           }
         }
       } catch (e) {
@@ -70,23 +138,49 @@ async function extractMp4FromPinPage(pinId: string, fallbackUrl: string): Promis
       }
     }
     
-    // Cách 2: Quét Regex các URL bị escape dấu gạch chéo (\/) trong HTML thô (Cực kỳ phổ biến trong JSON nhúng)
+    // Cách 2: Quét Regex các URL bị escape dấu gạch chéo (\/) trong HTML thô
+    // Lớp 2.1: Quét link MP4 trực tiếp bị escape
     const escapedMp4Matches = html.match(/https:\\\/\\\/v[12]\.pinimg\.com\\\/videos\\\/[a-zA-Z0-9_\\\/.-]+\.mp4/g);
     if (escapedMp4Matches && escapedMp4Matches.length > 0) {
       const uniqueUrls = Array.from(new Set(escapedMp4Matches)).map(url => url.replace(/\\\//g, '/'));
-      const bestUrl = uniqueUrls.find(url => url.includes('720p') || url.includes('h264')) || uniqueUrls[0];
-      console.log(`[video-ext] Tìm thấy video MP4 qua Regex escaped: ${bestUrl}`);
-      return bestUrl;
+      potentialUrls.push(...uniqueUrls);
     }
     
-    // Cách 3: Quét Regex các URL .mp4 thông thường (không bị escape) nếu có
+    // Lớp 2.2: Quét luồng HLS .m3u8 bị escape và tạo danh sách convert
+    const escapedM3u8Matches = html.match(/https:\\\/\\\/v[12]\.pinimg\.com\\\/videos\\\/[a-zA-Z0-9_\\\/.-]+\.m3u8/g);
+    if (escapedM3u8Matches && escapedM3u8Matches.length > 0) {
+      const uniqueUrls = Array.from(new Set(escapedM3u8Matches)).map(url => url.replace(/\\\//g, '/'));
+      uniqueUrls.forEach(hls => potentialUrls.push(...getMp4CandidatesFromHls(hls)));
+    }
+    
+    // Cách 3: Quét Regex các URL thông thường (không bị escape) nếu có
+    // Lớp 3.1: Quét link MP4 thông thường
     const normalMp4Matches = html.match(/https:\/\/v[12]\.pinimg\.com\/videos\/[a-zA-Z0-9_/.-]+\.mp4/g);
     if (normalMp4Matches && normalMp4Matches.length > 0) {
-      const uniqueUrls = Array.from(new Set(normalMp4Matches));
-      const bestUrl = uniqueUrls.find(url => url.includes('720p') || url.includes('h264')) || uniqueUrls[0];
-      console.log(`[video-ext] Tìm thấy video MP4 qua Regex bình thường: ${bestUrl}`);
-      return bestUrl;
+      potentialUrls.push(...Array.from(new Set(normalMp4Matches)));
     }
+
+    // Lớp 3.2: Quét link HLS m3u8 thông thường và tạo danh sách convert
+    const normalM3u8Matches = html.match(/https:\/\/v[12]\.pinimg\.com\/videos\/[a-zA-Z0-9_/.-]+\.m3u8/g);
+    if (normalM3u8Matches && normalM3u8Matches.length > 0) {
+      const uniqueUrls = Array.from(new Set(normalM3u8Matches));
+      uniqueUrls.forEach(hls => potentialUrls.push(...getMp4CandidatesFromHls(hls)));
+    }
+
+    // Lọc danh sách các URL hợp lệ duy nhất
+    const uniquePotentialUrls = Array.from(new Set(potentialUrls));
+    console.log(`[video-ext] Đang kiểm tra ${uniquePotentialUrls.length} ứng viên link MP4 cho Pin ID ${pinId}...`);
+    
+    // Thử nghiệm HEAD trên từng URL để tìm link thực sự hoạt động
+    for (const url of uniquePotentialUrls) {
+      const isValid = await checkUrlValidity(url);
+      if (isValid) {
+        console.log(`[video-ext] Tìm thấy video MP4 hợp lệ hoạt động 100%: ${url}`);
+        return url;
+      }
+    }
+
+    console.warn(`[video-ext] Không tìm thấy link MP4 hợp lệ nào trong ${uniquePotentialUrls.length} ứng viên!`);
   } catch (err) {
     console.error(`[video-ext] Lỗi fetch chi tiết Pin ${pinId}:`, err);
   }
@@ -121,6 +215,11 @@ async function downloadItem(item: CartItem): Promise<void> {
     if (item.type === 'video' && !finalUrl.toLowerCase().includes('.mp4')) {
       console.log(`[video-ext] Đang lấy link MP4 chính thức cho video Pin ID: ${item.id}`);
       finalUrl = await extractMp4FromPinPage(item.id, item.url);
+      
+      // Nếu sau khi trích xuất kiên cố mà vẫn không tìm thấy link MP4
+      if (!finalUrl.toLowerCase().includes('.mp4')) {
+        throw new Error('Không thể lấy link MP4 trực tiếp cho video này (Pinterest chặn hoặc luồng HLS đặc biệt).');
+      }
     }
 
     if (!finalUrl || !finalUrl.startsWith('http')) {
@@ -128,9 +227,9 @@ async function downloadItem(item: CartItem): Promise<void> {
     }
 
     const safeName = getSafeFilename(finalUrl, item.id, item.type);
-    const tagFolder = item.tag || 'default';
-    // Đường dẫn tương đối lưu trữ
-    const filename = `discord-video-bot-broll/${tagFolder}/${safeName}`;
+    const cleanTag = (item.tag || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
+    // Lưu thẳng vào thư mục tag bên trong Vị trí tải của Chrome
+    const filename = `${cleanTag}/${safeName}`;
 
     console.log(`[video-ext] Bắt đầu tải file: ${finalUrl} -> ${filename}`);
 

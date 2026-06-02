@@ -42,6 +42,7 @@
     "downloads"
   ],
   "host_permissions": [
-    "*://*.pinterest.com/*"
+    "*://*.pinterest.com/*",
+    "*://*.pinimg.com/*"
   ]
 }
