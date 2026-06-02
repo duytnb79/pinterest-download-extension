@@ -58,21 +58,37 @@ export const PopupApp: React.FC = () => {
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
   }, []);
 
-  // Tính toán tiến trình tải
+  // Tính toán tiến trình tải (Đảm bảo tuyến tính đi lên mượt mà, không bao giờ bị giật lùi)
   useEffect(() => {
-    const downloadingItems = items.filter(item => item.status === 'downloading');
-    const completedItems = items.filter(item => item.status === 'completed');
+    const calculateProgress = async () => {
+      const downloadingItems = items.filter(item => item.status === 'downloading');
+      const completedItems = items.filter(item => item.status === 'completed');
+      const failedItems = items.filter(item => item.status === 'failed');
+      const pendingItems = items.filter(item => item.status === 'pending');
+      
+      if (downloadingItems.length > 0) {
+        setIsDownloading(true);
+        
+        // Đọc tổng số lượng file trong phiên tải hiện tại từ storage
+        const storageData = await chrome.storage.local.get('video_ext_bulk_total');
+        const bulkTotal = storageData.video_ext_bulk_total || (downloadingItems.length + completedItems.length);
+        
+        // Số file thực sự đã hoàn thành tải trong phiên này:
+        // Lấy bulkTotal trừ đi số lượng file còn đang chờ và đang tải
+        const completedInSession = Math.max(0, bulkTotal - pendingItems.length - downloadingItems.length - failedItems.length);
+        
+        // Tiến trình thô = (số lượng file hoàn thành * 100) + (số lượng file đang tải * 50% tiến trình ước tính để tạo cảm giác mượt)
+        const progressSum = (completedInSession * 100) + (downloadingItems.length * 50);
+        const finalProgress = Math.min(99, Math.max(5, Math.round(progressSum / bulkTotal)));
+        
+        setDownloadProgress(finalProgress);
+      } else {
+        setIsDownloading(false);
+        setDownloadProgress(0);
+      }
+    };
     
-    if (downloadingItems.length > 0) {
-      setIsDownloading(true);
-      // Đơn giản hóa: tính tổng tiến trình
-      const totalItems = downloadingItems.length + completedItems.length;
-      const progressSum = downloadingItems.reduce((sum, item) => sum + (item.progress || 0), 0) + (completedItems.length * 100);
-      setDownloadProgress(progressSum / totalItems);
-    } else {
-      setIsDownloading(false);
-      setDownloadProgress(0);
-    }
+    void calculateProgress();
   }, [items]);
 
   const handleRemove = async (id: string) => {
@@ -105,9 +121,12 @@ export const PopupApp: React.FC = () => {
     });
   };
 
-  const handleDownloadAll = () => {
+  const handleDownloadAll = async () => {
     const pending = items.filter(item => item.status === 'pending' || item.status === 'failed');
     if (pending.length === 0) return;
+
+    // Lưu tổng số lượng file cần tải của phiên này vào storage làm mốc cố định
+    await chrome.storage.local.set({ video_ext_bulk_total: pending.length });
 
     chrome.runtime.sendMessage({
       type: 'START_DOWNLOAD_ALL',

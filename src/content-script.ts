@@ -506,6 +506,88 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
   });
 }
 
+// Hàm sắp xếp lại tọa độ của lưới Masonry để lấp đầy các khoảng trống (lủng lỗ) do ảnh tĩnh bị ẩn
+function rearrangeGrid(videoOnly: boolean) {
+  const pinContainers = document.querySelectorAll('[data-test-pin-id]');
+  if (pinContainers.length === 0) return;
+  
+  // Nhóm các Pin wrapper theo cột dựa trên tọa độ left (làm tròn pixel tránh sai số)
+  const columns: Record<number, HTMLElement[]> = {};
+  
+  pinContainers.forEach((pinEl) => {
+    const el = pinEl as HTMLElement;
+    
+    // Tìm thẻ wrapper định vị absolute của Pinterest (thường là thẻ cha trực tiếp hoặc cấp 2)
+    const wrapper = el.closest('[style*="position: absolute"]') as HTMLElement;
+    if (!wrapper) return;
+    
+    if (el.style.display === 'none') {
+      // Nếu Pin này bị ẩn (là hình ảnh)
+      wrapper.style.opacity = '0';
+      wrapper.style.pointerEvents = 'none';
+      wrapper.style.height = '0px';
+      wrapper.style.transform = 'scale(0)'; // Ẩn mượt mà
+      return;
+    } else {
+      wrapper.style.opacity = '1';
+      wrapper.style.pointerEvents = 'auto';
+      wrapper.style.height = '';
+      wrapper.style.transform = ''; // Khôi phục
+    }
+    
+    const leftMatch = wrapper.style.left.match(/(-?\d+(\.\d+)?)/);
+    if (!leftMatch) return;
+    const leftVal = Math.round(parseFloat(leftMatch[1]));
+    
+    if (!columns[leftVal]) {
+      columns[leftVal] = [];
+    }
+    columns[leftVal].push(wrapper);
+  });
+  
+  // Khoảng cách khoảng hở (gap) dọc của Pinterest (thường là 16px)
+  const gap = 16;
+  
+  // Sắp xếp lại tọa độ top cho từng cột dọc
+  Object.keys(columns).forEach((leftKey) => {
+    const leftVal = parseInt(leftKey);
+    const wrappers = columns[leftVal];
+    
+    // Sắp xếp các card trong cột theo thứ tự tọa độ top gốc của chúng
+    wrappers.sort((a, b) => {
+      const topA = parseFloat(a.getAttribute('data-orig-top') || a.style.top || '0');
+      const topB = parseFloat(b.getAttribute('data-orig-top') || b.style.top || '0');
+      return topA - topB;
+    });
+    
+    let currentTop = -1;
+    
+    wrappers.forEach((wrapper) => {
+      // Sao lưu lại tọa độ top gốc của Pinterest để làm mốc so sánh
+      if (!wrapper.hasAttribute('data-orig-top')) {
+        wrapper.setAttribute('data-orig-top', wrapper.style.top || '0');
+      }
+      
+      const origTop = parseFloat(wrapper.getAttribute('data-orig-top') || '0');
+      
+      if (currentTop === -1) {
+        // Card đầu tiên trong cột sẽ đặt sát đầu theo tọa độ gốc của nó
+        currentTop = origTop;
+      }
+      
+      if (videoOnly) {
+        wrapper.style.top = `${currentTop}px`;
+        // Tính toán tọa độ top tiếp theo = top hiện tại + chiều cao card con thực tế + gap
+        const cardHeight = wrapper.offsetHeight || 300;
+        currentTop += cardHeight + gap;
+      } else {
+        // Khôi phục lại tọa độ gốc của Pinterest nếu người dùng tắt tính năng ẩn ảnh
+        wrapper.style.top = `${origTop}px`;
+      }
+    });
+  });
+}
+
 // Hàm lọc ẩn/hiện các bài viết hình ảnh dựa trên cài đặt videoOnly (Chỉ giữ lại video B-Roll)
 async function filterPins() {
   if (!isExtensionContextValid()) return;
@@ -536,6 +618,9 @@ async function filterPins() {
         }
       }
     });
+
+    // Lấp đầy khoảng trống (lủng lỗ) sau khi lọc ẩn ảnh
+    rearrangeGrid(videoOnly);
   } catch (e) {}
 }
 
