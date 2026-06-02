@@ -90,7 +90,8 @@ export async function getSettings(): Promise<ExtensionSettings> {
   const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
   const defaultSettings: ExtensionSettings = {
     presetTags: DEFAULT_PRESET_TAGS,
-    defaultTag: 'default'
+    defaultTag: 'default',
+    videoOnly: true // Mặc định bật Chỉ xử lý Video, ẩn hoàn toàn nút trên hình ảnh
   };
   return result[STORAGE_KEYS.SETTINGS] || defaultSettings;
 }

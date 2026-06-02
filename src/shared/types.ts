@@ -15,6 +15,7 @@ export interface CartItem {
 export interface ExtensionSettings {
   presetTags: string[];
   defaultTag: string;
+  videoOnly: boolean; // Chỉ hiển thị nút tải và giỏ hàng cho video, bỏ qua ảnh hoàn toàn
 }
 
 export const DEFAULT_PRESET_TAGS = [

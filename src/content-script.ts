@@ -1,4 +1,4 @@
-import { findPinContainer, extractMediaFromPin, PinterestMediaInfo } from './content/pinterest-detector';
+import { findPinContainer, extractMediaFromPin, PinterestMediaInfo, getPinIdFromUrl, extractTagsFromDOM } from './content/pinterest-detector';
 
 // CSS chèn động vào Pinterest để định dạng overlay nổi và các nút
 const OVERLAY_STYLE = `
@@ -308,7 +308,19 @@ dlBtn.addEventListener('click', (evt) => {
 });
 
 // Hàm hiển thị Floating Overlay đè lên đúng tọa độ Pin
-function showFloatingOverlay(pinEl: HTMLElement, media: PinterestMediaInfo) {
+async function showFloatingOverlay(pinEl: HTMLElement, media: PinterestMediaInfo) {
+  if (!isExtensionContextValid()) return;
+
+  // 1. Kiểm tra cấu hình videoOnly để tự động lọc Ảnh
+  try {
+    const settingsData = await chrome.storage.local.get('video_ext_settings');
+    const videoOnly = settingsData.video_ext_settings?.videoOnly ?? true; // Mặc định bật tối ưu B-Roll
+    if (videoOnly && media.type === 'image') {
+      hideFloatingOverlay();
+      return;
+    }
+  } catch (e) {}
+
   if (hideTimeout) {
     clearTimeout(hideTimeout);
     hideTimeout = null;
@@ -384,6 +396,56 @@ document.addEventListener('mouseover', (e) => {
     }
     return;
   }
+
+  // 1. PHÁT HIỆN VIDEO CHÍNH ĐANG PHÁT TRÊN TRANG CHI TIẾT (Closeup Video)
+  let isCloseupVideo = false;
+  let videoTarget: HTMLVideoElement | null = null;
+  
+  if (target.tagName === 'VIDEO') {
+    videoTarget = target as HTMLVideoElement;
+    isCloseupVideo = true;
+  } else if (target.querySelector('video')) {
+    videoTarget = target.querySelector('video') as HTMLVideoElement;
+    isCloseupVideo = true;
+  } else if (target.closest('[data-test-id="visual-content-container"]') || target.closest('[data-test-id="closeup-image"]')) {
+    // Có thể hover lên lớp overlay trong suốt của Pinterest phủ lên video chính
+    const parentContainer = target.closest('[data-test-id="visual-content-container"]') || target.closest('[data-test-id="closeup-image"]');
+    const v = parentContainer?.querySelector('video');
+    if (v) {
+      videoTarget = v as HTMLVideoElement;
+      isCloseupVideo = true;
+    }
+  }
+
+  if (isCloseupVideo && videoTarget) {
+    const pinId = getPinIdFromUrl(window.location.href);
+    if (pinId) {
+      const videoUrl = videoTarget.src || '';
+      if (videoUrl && !videoUrl.startsWith('blob:')) {
+        const videoContainer = videoTarget.parentElement || videoTarget;
+        
+        // Hủy timeout ẩn nếu di chuyển trong vùng video chính
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+
+        if (currentPinElement !== videoContainer) {
+          const media: PinterestMediaInfo = {
+            id: pinId,
+            url: videoUrl,
+            thumbnail: '',
+            type: 'video',
+            pageUrl: window.location.href,
+            title: document.querySelector('h1')?.textContent || 'Pinterest Video',
+            tags: extractTagsFromDOM(pinId) // Bóc tag sạch tự động từ DOM thật của tab
+          };
+          showFloatingOverlay(videoContainer, media);
+        }
+        return;
+      }
+    }
+  }
   
   const pinContainer = findPinContainer(target);
   if (pinContainer) {
@@ -440,6 +502,52 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
       if (currentMediaInfo && currentMediaInfo.id === itemId) {
         updateDownloadButtonState(status);
       }
+    }
+  });
+}
+
+// Hàm lọc ẩn/hiện các bài viết hình ảnh dựa trên cài đặt videoOnly (Chỉ giữ lại video B-Roll)
+async function filterPins() {
+  if (!isExtensionContextValid()) return;
+  try {
+    const settingsData = await chrome.storage.local.get('video_ext_settings');
+    const videoOnly = settingsData.video_ext_settings?.videoOnly ?? true; // Mặc định bật tối ưu B-Roll
+    
+    const pinContainers = document.querySelectorAll('[data-test-pin-id]');
+    pinContainers.forEach((pinEl) => {
+      const el = pinEl as HTMLElement;
+      
+      // Đọc cache loại media để tối ưu hiệu năng tuyệt đối không gây giật lag trang
+      let mediaType = el.getAttribute('data-media-detected');
+      
+      if (!mediaType) {
+        const media = extractMediaFromPin(el);
+        if (media) {
+          mediaType = media.type;
+          el.setAttribute('data-media-detected', media.type);
+        }
+      }
+      
+      if (mediaType === 'image') {
+        if (videoOnly) {
+          el.style.display = 'none'; // Ẩn biến mất tăm bài viết là hình ảnh!
+        } else {
+          el.style.display = ''; // Khôi phục hiển thị nếu người dùng tắt cài đặt
+        }
+      }
+    });
+  } catch (e) {}
+}
+
+// Khởi chạy vòng quét lọc Pin mỗi 300ms để bắt kịp tốc độ cuộn chuột tải trang của Pinterest
+setInterval(filterPins, 300);
+setTimeout(filterPins, 1000);
+
+// Lập tức áp dụng thay đổi khi người dùng bật/tắt Toggle trong trang cấu hình
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.video_ext_settings) {
+      void filterPins();
     }
   });
 }

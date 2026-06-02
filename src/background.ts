@@ -80,6 +80,49 @@ function getMp4CandidatesFromHls(hlsUrl: string): string[] {
   return candidates;
 }
 
+// Trích xuất tags tự động từ tag list, annotations, title và description của Pinterest
+function extractTagsFromHtmlAndJson(html: string, pinId: string): string[] {
+  const tagsSet = new Set<string>();
+  
+  // 1. Tìm trong __PWS_DATA__ (Chứa database sạch của Pinterest cho Pin này)
+  const scriptMatch = html.match(/<script id="__PWS_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+  if (scriptMatch && scriptMatch[1]) {
+    try {
+      const jsonData = JSON.parse(scriptMatch[1]);
+      const pinData = jsonData?.props?.initialReduxState?.pins?.[pinId];
+      
+      if (pinData) {
+        // Lấy từ mảng tags phân loại chính thức của Pinterest
+        if (Array.isArray(pinData.tags)) {
+          pinData.tags.forEach((t: any) => {
+            if (t && t.name) tagsSet.add(t.name);
+          });
+        }
+        
+        // Lấy từ Visual Annotations (Từ khóa do AI của Pinterest tự nhận diện hình ảnh của video)
+        if (pinData.visual_annotation_keywords && Array.isArray(pinData.visual_annotation_keywords)) {
+          pinData.visual_annotation_keywords.forEach((keyword: string) => {
+            if (keyword) tagsSet.add(keyword);
+          });
+        }
+        
+        // Lấy từ Hashtags trong description
+        if (pinData.description) {
+          const hashtags = pinData.description.match(/#[a-zA-Z0-9_À-ỹ]+/g);
+          if (hashtags) {
+            hashtags.forEach((h: string) => tagsSet.add(h.substring(1)));
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Làm sạch tags: đổi sang chữ thường, thay khoảng trắng thành gạch dưới, loại bỏ ký tự lạ
+  return Array.from(tagsSet)
+    .map(tag => tag.toLowerCase().trim().replace(/[^a-z0-9_à-ỹ]/g, '_').replace(/_+/g, '_'))
+    .filter(tag => tag.length > 2 && tag !== 'pinterest');
+}
+
 // Fetch trang chi tiết Pin ngầm và trích xuất URL video .mp4 chất lượng cao nhất bằng 6 lớp kiên cố kết hợp kiểm tra tính khả dụng HEAD
 async function extractMp4FromPinPage(pinId: string, fallbackUrl: string): Promise<string> {
   try {
@@ -112,6 +155,11 @@ async function extractMp4FromPinPage(pinId: string, fallbackUrl: string): Promis
     
     const html = await response.text();
     const potentialUrls: string[] = [];
+    
+    // Tự động bóc tách tags từ AI Pinterest và Hashtags
+    const autoTags = extractTagsFromHtmlAndJson(html, pinId);
+    console.log(`[video-ext] Tự động tìm thấy ${autoTags.length} tags cho Pin ${pinId}:`, autoTags);
+    await chrome.storage.local.set({ [`auto_tags_${pinId}`]: autoTags });
     
     // Cách 1: Parse tag script __PWS_DATA__ (chính xác và an toàn nhất)
     const scriptMatch = html.match(/<script id="__PWS_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
@@ -228,17 +276,50 @@ async function downloadItem(item: CartItem): Promise<void> {
 
     const safeName = getSafeFilename(finalUrl, item.id, item.type);
     const cleanTag = (item.tag || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
-    // Lưu thẳng vào thư mục tag bên trong Vị trí tải của Chrome
-    const filename = `${cleanTag}/${safeName}`;
 
-    console.log(`[video-ext] Bắt đầu tải file: ${finalUrl} -> ${filename}`);
+    // Lấy tags tự động: Ưu tiên tags bóc sẵn từ DOM gửi kèm theo item, fallback lấy từ storage nếu tải ngầm
+    const storageKey = `auto_tags_${item.id}`;
+    const storageResult = await chrome.storage.local.get(storageKey);
+    const autoTags: string[] = (item as any).tags || storageResult[storageKey] || [];
+    
+    // Xử lý tags thủ công (ngăn cách bằng dấu phẩy)
+    const manualTags = (item.tag || '')
+      .split(',')
+      .map(t => t.trim().toLowerCase().replace(/[^a-z0-9_à-ỹ]/g, '_').replace(/_+/g, '_'))
+      .filter(t => t.length > 0);
 
+    // Gộp (merge) tags tự động và thủ công, loại bỏ trùng lặp
+    const mergedTagsSet = new Set<string>([...autoTags, ...manualTags]);
+    const finalTags = Array.from(mergedTagsSet).filter(t => t !== 'default' && t.trim() !== '');
+
+    console.log(`[video-ext] Tags tổng hợp cho Pin ID ${item.id}:`, finalTags);
+
+    // Tự động nhúng tags vào cuối tên file: pinterest_id_timestamp__tag1_tag2.mp4
+    let taggedSafeName = safeName;
+    if (finalTags.length > 0) {
+      const tagsSuffix = finalTags.join('_');
+      // Tách extension để nhúng tags vào trước đuôi .mp4 hoặc .jpg
+      const extMatch = safeName.match(/\.([a-zA-Z0-9]+)$/);
+      if (extMatch && extMatch[0]) {
+        taggedSafeName = safeName.replace(extMatch[0], `__${tagsSuffix}${extMatch[0]}`);
+      } else {
+        taggedSafeName = `${safeName}__${tagsSuffix}`;
+      }
+    }
+
+    const filename = `${cleanTag}/${taggedSafeName}`;
+    console.log(`[video-ext] Bắt đầu tải file có chứa tags: ${finalUrl} -> ${filename}`);
+
+    // Tải file video duy nhất
     const downloadId = await chrome.downloads.download({
       url: finalUrl,
       filename: filename,
       conflictAction: 'uniquify',
       saveAs: false
     });
+
+    // Xóa tạm dữ liệu tag tự động của ID này trong storage cho sạch
+    chrome.storage.local.remove(storageKey).catch(() => {});
 
     // Lưu trữ mapping giữa downloadId và item.id để theo dõi tiến trình
     await chrome.storage.local.set({ [`dl_${downloadId}`]: item.id });

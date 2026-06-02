@@ -10,13 +10,14 @@ import {
   AlertCircle, 
   ArrowRight,
   ExternalLink,
-  FolderOpen
+  FolderOpen,
+  Video
 } from 'lucide-react';
 import { getSettings, saveSettings } from '../shared/storage';
 import { ExtensionSettings } from '../shared/types';
 
 export const OptionsApp: React.FC = () => {
-  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default' });
+  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default', videoOnly: true });
   const [newTag, setNewTag] = useState('');
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
 
@@ -28,6 +29,12 @@ export const OptionsApp: React.FC = () => {
     };
     void loadData();
   }, []);
+
+  const handleToggleVideoOnly = async () => {
+    const updated = { ...settings, videoOnly: !settings.videoOnly };
+    setSettings(updated);
+    await saveSettings(updated);
+  };
 
   const handleAddTag = async () => {
     const tag = newTag.trim().toLowerCase();
@@ -56,7 +63,7 @@ export const OptionsApp: React.FC = () => {
       defaultTag = 'default';
     }
 
-    const updatedSettings = { presetTags: updatedTags, defaultTag };
+    const updatedSettings = { ...settings, presetTags: updatedTags, defaultTag };
     setSettings(updatedSettings);
     await saveSettings(updatedSettings);
   };
@@ -93,8 +100,29 @@ export const OptionsApp: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column: Tag Management */}
+          {/* Left Column: Tag Management & Settings */}
           <div className="lg:col-span-1 space-y-6">
+            
+            {/* Bộ Lọc Media */}
+            <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
+                <Video className="w-4 h-4 text-app-primary" />
+                <span>Bộ Lọc Media (Tối ưu B-Roll)</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-semibold">Ẩn bài viết hình ảnh</span>
+                  <span className="text-[10px] text-app-text-muted">Ẩn hoàn toàn các bài viết ảnh tĩnh trên Pinterest, chỉ giữ lại video</span>
+                </div>
+                <button
+                  onClick={handleToggleVideoOnly}
+                  className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-all duration-300 ${settings.videoOnly ? 'bg-app-accent justify-end' : 'bg-app-border justify-start'}`}
+                >
+                  <span className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${settings.videoOnly ? 'translate-x-0' : ''}`} />
+                </button>
+              </div>
+            </section>
+
             <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
                 <TagIcon className="w-4 h-4 text-app-accent" />

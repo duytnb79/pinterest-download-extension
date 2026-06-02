@@ -5,6 +5,7 @@ export interface PinterestMediaInfo {
   type: 'video' | 'image';
   pageUrl: string;
   title?: string;
+  tags?: string[]; // Bổ sung tags bóc tách trực tiếp từ DOM
 }
 
 // Trích xuất ID pin từ URL trang hoặc thuộc tính DOM
@@ -16,14 +17,62 @@ export function getPinIdFromUrl(url: string): string | null {
 // Chuyển đổi link ảnh Pinterest thành link gốc chất lượng cao nhất (Originals)
 export function getOriginalImageUrl(srcUrl: string): string {
   if (!srcUrl) return '';
-  // Ví dụ: https://i.pinimg.com/564x/a1/b2/c3/a1b2c3.jpg
-  // Chuyển đổi thành: https://i.pinimg.com/originals/a1/b2/c3/a1b2c3.jpg
   return srcUrl.replace(/\/(?:236x|474x|564x|736x)\//, '/originals/');
+}
+
+// Trích xuất tags phân loại và Visual Annotations trực tiếp từ DOM trên tab người dùng
+export function extractTagsFromDOM(pinId: string): string[] {
+  const tagsSet = new Set<string>();
+  
+  try {
+    // 1. Lấy dữ liệu từ script __PWS_DATA__ có sẵn trên DOM
+    const pwsScript = document.getElementById('__PWS_DATA__');
+    if (pwsScript && pwsScript.textContent) {
+      const jsonData = JSON.parse(pwsScript.textContent);
+      const pinData = jsonData?.props?.initialReduxState?.pins?.[pinId];
+      if (pinData) {
+        // Lấy từ danh mục tags phân loại
+        if (Array.isArray(pinData.tags)) {
+          pinData.tags.forEach((t: any) => {
+            if (t && t.name) tagsSet.add(t.name);
+          });
+        }
+        // Lấy từ Visual Annotations do AI của Pinterest tự động nhận diện hình ảnh
+        if (pinData.visual_annotation_keywords && Array.isArray(pinData.visual_annotation_keywords)) {
+          pinData.visual_annotation_keywords.forEach((keyword: string) => {
+            if (keyword) tagsSet.add(keyword);
+          });
+        }
+        // Lấy từ hashtags trong mô tả
+        if (pinData.description) {
+          const hashtags = pinData.description.match(/#[a-zA-Z0-9_À-ỹ]+/g);
+          if (hashtags) {
+            hashtags.forEach((h: string) => tagsSet.add(h.substring(1)));
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
+  try {
+    // 2. Dự phòng: Đọc trực tiếp thẻ mô tả hiển thị trên DOM
+    const descEl = document.querySelector('[data-test-id="pin-description-text"]');
+    if (descEl && descEl.textContent) {
+      const hashtags = descEl.textContent.match(/#[a-zA-Z0-9_À-ỹ]+/g);
+      if (hashtags) {
+        hashtags.forEach((h: string) => tagsSet.add(h.substring(1)));
+      }
+    }
+  } catch (e) {}
+
+  // Làm sạch tags
+  return Array.from(tagsSet)
+    .map(tag => tag.toLowerCase().trim().replace(/[^a-z0-9_à-ỹ]/g, '_').replace(/_+/g, '_'))
+    .filter(tag => tag.length > 2 && tag !== 'pinterest');
 }
 
 // Tìm container Pin gần nhất từ một element
 export function findPinContainer(el: HTMLElement): HTMLElement | null {
-  // Chỉ tìm div có data-test-pin-id. Đảm bảo current là Element thực sự (nodeType === 1) để tránh lỗi 'hasAttribute is not a function' trên Text/SVG nodes.
   let current: HTMLElement | null = el;
   while (current && current !== document.body) {
     if (current.nodeType === 1 && typeof current.hasAttribute === 'function' && current.hasAttribute('data-test-pin-id')) {
@@ -43,9 +92,8 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
   if (!pinId && pinLinkEl) {
     pinId = getPinIdFromUrl(pinLinkEl.href);
   }
-
+ 
   if (!pinId) {
-    // Không tìm thấy ID pin, tạo ID ngẫu nhiên hoặc hash dựa trên link ảnh
     const img = pinEl.querySelector('img');
     if (img && img.src) {
       const match = img.src.match(/\/([a-f0-9]+)\.jpg/i);
@@ -65,15 +113,14 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
   }
 
   // 3. Phát hiện Video
-  // Grid Pinterest đôi khi phát video khi hover. Ta quét thẻ video
   const videoEl = pinEl.querySelector('video') as HTMLVideoElement | null;
-  // 3. Kiểm tra dấu hiệu Video (Play icon, text thời lượng dạng 0:15, hoặc thẻ video)
   const hasVideoTag = pinEl.querySelector('video') !== null;
   const hasPlayIcon = pinEl.querySelector('svg[aria-label="Play"], [data-test-id="video-snippet"], svg path[d*="M8 5v14l11-7z"]') !== null;
   const hasDurationBadge = pinEl.textContent ? /\d+:\d+/.test(pinEl.textContent) : false;
   const isVideo = hasVideoTag || hasPlayIcon || hasDurationBadge;
 
   const originalUrl = imgEl && imgEl.src ? getOriginalImageUrl(imgEl.src) : '';
+  const tags = extractTagsFromDOM(pinId);
 
   if (isVideo) {
     let videoUrl = '';
@@ -87,7 +134,6 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
       }
     }
 
-    // Nếu tìm được URL video thực tế không phải blob
     if (videoUrl && !videoUrl.startsWith('blob:')) {
       return {
         id: pinId,
@@ -95,23 +141,22 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
         thumbnail: imgEl ? imgEl.src : '',
         type: 'video',
         pageUrl,
-        title: title || 'Pinterest Video'
+        title: title || 'Pinterest Video',
+        tags
       };
     }
 
-    // Nếu là video nhưng chưa lấy được URL thật (chỉ có blob hoặc lazy load), ta vẫn trả về type: video
-    // Background script sẽ fetch ngầm trang chi tiết Pin để parse link MP4 thật khi tải/thêm giỏ hàng!
     return {
       id: pinId,
-      url: originalUrl || (imgEl ? imgEl.src : ''), // Lưu tạm url ảnh làm dự phòng
+      url: originalUrl || (imgEl ? imgEl.src : ''),
       thumbnail: imgEl ? imgEl.src : '',
       type: 'video',
       pageUrl,
-      title: title || 'Pinterest Video'
+      title: title || 'Pinterest Video',
+      tags
     };
   }
 
-  // 4. Phát hiện Ảnh (nếu không phải Video)
   if (imgEl && imgEl.src) {
     return {
       id: pinId,
@@ -119,7 +164,8 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
       thumbnail: imgEl.src,
       type: 'image',
       pageUrl,
-      title: title || 'Pinterest Image'
+      title: title || 'Pinterest Image',
+      tags
     };
   }
 
