@@ -23,19 +23,11 @@ export function getOriginalImageUrl(srcUrl: string): string {
 
 // Tìm container Pin gần nhất từ một element
 export function findPinContainer(el: HTMLElement): HTMLElement | null {
-  // Pinterest sắp xếp grid bằng các thẻ div. Ta tìm div có data-test-pin-id hoặc class đặc thù
+  // Chỉ tìm div có data-test-pin-id. Đảm bảo current là Element thực sự (nodeType === 1) để tránh lỗi 'hasAttribute is not a function' trên Text/SVG nodes.
   let current: HTMLElement | null = el;
   while (current && current !== document.body) {
-    if (current.hasAttribute('data-test-pin-id')) {
+    if (current.nodeType === 1 && typeof current.hasAttribute === 'function' && current.hasAttribute('data-test-pin-id')) {
       return current;
-    }
-    // Fallback: Tìm div có class chứa cấu trúc của Pin hoặc có thẻ a trỏ đến /pin/
-    if (current.tagName === 'DIV') {
-      const pinLink = current.querySelector('a[href^="/pin/"]');
-      if (pinLink && current.querySelector('img')) {
-        // Đây có thể là Pin container
-        return current;
-      }
     }
     current = current.parentElement;
   }
@@ -75,18 +67,27 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
   // 3. Phát hiện Video
   // Grid Pinterest đôi khi phát video khi hover. Ta quét thẻ video
   const videoEl = pinEl.querySelector('video') as HTMLVideoElement | null;
-  if (videoEl) {
-    let videoUrl = videoEl.src || videoEl.getAttribute('data-src') || '';
-    
-    // Nếu src rỗng hoặc là blob, hãy tìm thẻ <source> bên trong
-    if (!videoUrl || videoUrl.startsWith('blob:')) {
-      const sourceEl = videoEl.querySelector('source') as HTMLSourceElement | null;
-      if (sourceEl) {
-        videoUrl = sourceEl.src || sourceEl.getAttribute('data-src') || videoUrl;
+  // 3. Kiểm tra dấu hiệu Video (Play icon, text thời lượng dạng 0:15, hoặc thẻ video)
+  const hasVideoTag = pinEl.querySelector('video') !== null;
+  const hasPlayIcon = pinEl.querySelector('svg[aria-label="Play"], [data-test-id="video-snippet"], svg path[d*="M8 5v14l11-7z"]') !== null;
+  const hasDurationBadge = pinEl.textContent ? /\d+:\d+/.test(pinEl.textContent) : false;
+  const isVideo = hasVideoTag || hasPlayIcon || hasDurationBadge;
+
+  const originalUrl = imgEl && imgEl.src ? getOriginalImageUrl(imgEl.src) : '';
+
+  if (isVideo) {
+    let videoUrl = '';
+    if (videoEl) {
+      videoUrl = videoEl.src || videoEl.getAttribute('data-src') || '';
+      if (!videoUrl || videoUrl.startsWith('blob:')) {
+        const sourceEl = videoEl.querySelector('source') as HTMLSourceElement | null;
+        if (sourceEl) {
+          videoUrl = sourceEl.src || sourceEl.getAttribute('data-src') || videoUrl;
+        }
       }
     }
 
-    // Nếu tìm được URL video thực tế
+    // Nếu tìm được URL video thực tế không phải blob
     if (videoUrl && !videoUrl.startsWith('blob:')) {
       return {
         id: pinId,
@@ -97,17 +98,21 @@ export function extractMediaFromPin(pinEl: HTMLElement): PinterestMediaInfo | nu
         title: title || 'Pinterest Video'
       };
     }
+
+    // Nếu là video nhưng chưa lấy được URL thật (chỉ có blob hoặc lazy load), ta vẫn trả về type: video
+    // Background script sẽ fetch ngầm trang chi tiết Pin để parse link MP4 thật khi tải/thêm giỏ hàng!
+    return {
+      id: pinId,
+      url: originalUrl || (imgEl ? imgEl.src : ''), // Lưu tạm url ảnh làm dự phòng
+      thumbnail: imgEl ? imgEl.src : '',
+      type: 'video',
+      pageUrl,
+      title: title || 'Pinterest Video'
+    };
   }
 
-  // Dự phòng: Tìm dấu hiệu pin này là video (nút play hoặc thời lượng)
-  // Nếu có dấu hiệu nhưng thẻ video chưa load, ta vẫn tạm gọi là video (để content-script poll)
-  const isVideoPin = pinEl.querySelector('[data-test-id="pin-visual-wrapper"] svg[aria-label="Play"]') || 
-                     pinEl.textContent?.match(/\d+:\d+/);
-
-
-  // 4. Phát hiện Ảnh (nếu không có Video)
+  // 4. Phát hiện Ảnh (nếu không phải Video)
   if (imgEl && imgEl.src) {
-    const originalUrl = getOriginalImageUrl(imgEl.src);
     return {
       id: pinId,
       url: originalUrl || imgEl.src,
