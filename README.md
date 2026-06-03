@@ -13,6 +13,8 @@ A modern, premium Chrome Extension to easily download high-quality videos and im
 
 Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb79)**.
 
+<video src="assets/guide.mp4" width="100%" controls autoplay loop muted></video>
+
 </div>
 
 ---
@@ -26,6 +28,21 @@ Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb7
 - **Custom Download Path Settings**: Configure custom subfolders (default: `pinterest-downloads`) within Chrome's default Downloads directory.
 - **Smart Media Filter**: Hide static image pins and automatically rearrange Pinterest's Masonry grid layout for a video-only browsing experience.
 - **Closeup View Integration**: Fully supports closeup pin pages, allowing direct downloads on main video players that use Blob streaming URLs.
+
+---
+
+## 📸 Interface Screenshots
+
+<div align="center">
+  <h3>1. Direct Download Overlay on Pinterest Grid</h3>
+  <img src="assets/image_default.png" alt="Overlay Injected" width="90%" />
+  
+  <h3>2. Download Queue & Tag Management Popup</h3>
+  <img src="assets/image_download.png" alt="Queue Cart" width="90%" />
+  
+  <h3>3. Configuration Options & Custom Paths</h3>
+  <img src="assets/image_settings.png" alt="Options Settings" width="90%" />
+</div>
 
 ---
 
