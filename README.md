@@ -88,6 +88,20 @@ A modern, premium Chrome Extension to easily download high-quality videos and im
 
 ---
 
+## ⚙️ How to Enable Silent Batch Downloads (No Prompts)
+
+For the best user experience and to download files automatically without clicking **"Save"** for every single file:
+
+1. Copy and paste `chrome://settings/downloads` into your Chrome address bar.
+2. Find the setting **"Ask where to save each file before downloading"** (or **"Hỏi vị trí lưu từng tệp trước khi tải xuống"**).
+3. Toggle this setting **OFF**.
+
+> [!IMPORTANT]
+> **Why is this necessary?** 
+> For security, Google Chrome's browser preferences override extension instructions. The Extension API cannot programmatically alter this setting. If it is enabled, Chrome will force a "Save As" dialog for every download. Disabling it allows the extension to organize files into your categorized subfolders silently and automatically.
+
+---
+
 ## 📖 Storage Hierarchy & Usage
 
 For security, Google Chrome restricts downloads to the local `Downloads` directory. Files downloaded by this extension are organized into the following tree structure:

@@ -251,6 +251,14 @@ async function downloadItem(item: CartItem): Promise<void> {
     await updateCartItemStatus(item.id, 'downloading', 0);
     void broadcastDownloadStatus(item.id, 'downloading');
 
+    try {
+      const activeData = await chrome.storage.local.get('video_ext_active_downloads');
+      const activeDownloads = activeData.video_ext_active_downloads || [];
+      if (!activeDownloads.includes(item.id)) {
+        await chrome.storage.local.set({ video_ext_active_downloads: [...activeDownloads, item.id] });
+      }
+    } catch (e) { }
+
     let finalUrl = item.url;
 
     // If media type is video but URL points to thumbnail image (e.g. from lazy list)
@@ -327,6 +335,13 @@ async function downloadItem(item: CartItem): Promise<void> {
     await chrome.storage.local.set({ [`dl_${downloadId}`]: item.id });
   } catch (err: any) {
     console.error(`[video-ext] Error downloading file ${item.id}:`, err);
+    try {
+      const activeData = await chrome.storage.local.get('video_ext_active_downloads');
+      const activeDownloads = activeData.video_ext_active_downloads || [];
+      await chrome.storage.local.set({
+        video_ext_active_downloads: activeDownloads.filter((id: string) => id !== item.id)
+      });
+    } catch (e) { }
     await updateCartItemStatus(item.id, 'failed', undefined, err.message || 'Download failed');
     void broadcastDownloadStatus(item.id, 'failed');
     await updateBadge();
@@ -344,10 +359,15 @@ chrome.downloads.onChanged.addListener(async (delta) => {
   if (delta.state) {
     if (delta.state.current === 'complete') {
       console.log(`[video-ext] Download completed: itemId=${itemId}`);
-      await updateCartItemStatus(itemId, 'completed', 100);
-      void broadcastDownloadStatus(itemId, 'completed');
-      await chrome.storage.local.remove(key);
-      await updateBadge();
+      
+      // Remove from active downloads
+      try {
+        const activeData = await chrome.storage.local.get('video_ext_active_downloads');
+        const activeDownloads = activeData.video_ext_active_downloads || [];
+        await chrome.storage.local.set({
+          video_ext_active_downloads: activeDownloads.filter((id: string) => id !== itemId)
+        });
+      } catch (e) { }
 
       // Store download ID to cache completed items and display check badge
       try {
@@ -357,8 +377,23 @@ chrome.downloads.onChanged.addListener(async (delta) => {
           await chrome.storage.local.set({ video_ext_downloaded_ids: [...downloadedIds, itemId] });
         }
       } catch (e) { }
+
+      await updateCartItemStatus(itemId, 'completed', 100);
+      void broadcastDownloadStatus(itemId, 'completed');
+      await chrome.storage.local.remove(key);
+      await updateBadge();
     } else if (delta.state.current === 'interrupted') {
       console.error(`[video-ext] Download failed: itemId=${itemId}, reason=${delta.error?.current}`);
+      
+      // Remove from active downloads
+      try {
+        const activeData = await chrome.storage.local.get('video_ext_active_downloads');
+        const activeDownloads = activeData.video_ext_active_downloads || [];
+        await chrome.storage.local.set({
+          video_ext_active_downloads: activeDownloads.filter((id: string) => id !== itemId)
+        });
+      } catch (e) { }
+
       await updateCartItemStatus(itemId, 'failed', undefined, `Interrupted: ${delta.error?.current || 'unknown'}`);
       void broadcastDownloadStatus(itemId, 'failed');
       await chrome.storage.local.remove(key);

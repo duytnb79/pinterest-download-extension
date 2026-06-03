@@ -95,7 +95,7 @@ export const OptionsApp: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-wide uppercase">Social Media Downloader Settings</h1>
-            <p className="text-xs text-app-text-muted">Manage B-Roll directories and automate asset synchronization</p>
+            <p className="text-xs text-app-text-muted">Manage directories and automate asset synchronization</p>
           </div>
         </header>
 
@@ -108,7 +108,7 @@ export const OptionsApp: React.FC = () => {
             <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
                 <Video className="w-4 h-4 text-app-primary" />
-                <span>Media Filter (B-Roll Optimizer)</span>
+                <span>Filter</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <div className="flex flex-col gap-0.5">
@@ -117,7 +117,7 @@ export const OptionsApp: React.FC = () => {
                 </div>
                 <button
                   onClick={handleToggleVideoOnly}
-                  className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-all duration-300 ${settings.videoOnly ? 'bg-app-accent justify-end' : 'bg-app-border justify-start'}`}
+                  className={`w-14 h-5 flex items-center rounded-full p-0.5 transition-all duration-300 ${settings.videoOnly ? 'bg-app-accent justify-end' : 'bg-app-border justify-start'}`}
                 >
                   <span className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${settings.videoOnly ? 'translate-x-0' : ''}`} />
                 </button>

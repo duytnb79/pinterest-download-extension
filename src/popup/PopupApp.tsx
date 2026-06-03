@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+// @ts-ignore
+import logoIcon from '../assets/icon48.png';
 import { 
   FolderIcon, 
   Settings, 
@@ -154,9 +156,11 @@ export const PopupApp: React.FC = () => {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-app-bg-card border-b border-app-border/60">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-app-primary to-app-accent flex items-center justify-center shadow-md shadow-app-primary/10">
-            <ShoppingCart className="w-4 h-4 text-white" />
-          </div>
+          <img 
+            src={logoIcon} 
+            alt="Logo" 
+            className="w-7 h-7 rounded-lg shadow-md shadow-app-primary/10 object-contain" 
+          />
           <div>
             <h1 className="text-xs font-bold tracking-wide">SOCIAL DOWNLOADER</h1>
             <p className="text-[9px] text-app-text-muted">Compact Video Downloader</p>
