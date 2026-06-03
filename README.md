@@ -11,7 +11,7 @@
 A modern, premium Chrome Extension to easily download high-quality videos and images from Pinterest directly into custom predefined folders, automatically organized and categorized by tags/hashtags.
 </p>
 
-<video src="assets/guide.mp4" width="100%" controls autoplay loop muted></video>
+<img src="assets/guide.gif" alt="Extension Guide" width="100%" />
 
 </div>
 
