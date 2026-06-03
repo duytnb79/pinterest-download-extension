@@ -16,6 +16,7 @@ export interface ExtensionSettings {
   presetTags: string[];
   defaultTag: string;
   videoOnly: boolean; // Chỉ hiển thị nút tải và giỏ hàng cho video, bỏ qua ảnh hoàn toàn
+  downloadFolder?: string;
 }
 
 export const DEFAULT_PRESET_TAGS = [

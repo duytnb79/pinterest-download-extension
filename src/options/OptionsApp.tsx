@@ -17,15 +17,17 @@ import { getSettings, saveSettings } from '../shared/storage';
 import { ExtensionSettings } from '../shared/types';
 
 export const OptionsApp: React.FC = () => {
-  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default', videoOnly: true });
+  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default', videoOnly: true, downloadFolder: 'discord-video-bot-broll' });
   const [newTag, setNewTag] = useState('');
-  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+  const [downloadFolderInput, setDownloadFolderInput] = useState('');
+  const [saveStatus, setSaveStatus] = useState<boolean | null>(null);
 
   // Khởi tạo settings
   useEffect(() => {
     const loadData = async () => {
       const data = await getSettings();
       setSettings(data);
+      setDownloadFolderInput(data.downloadFolder || '');
     };
     void loadData();
   }, []);
@@ -74,14 +76,13 @@ export const OptionsApp: React.FC = () => {
     await saveSettings(updatedSettings);
   };
 
-  const handleCopyCmd = (cmd: string, key: string) => {
-    navigator.clipboard.writeText(cmd);
-    setCopiedCmd(key);
-    setTimeout(() => setCopiedCmd(null), 2000);
+  const handleSaveDownloadFolder = async () => {
+    const updatedSettings = { ...settings, downloadFolder: downloadFolderInput.trim() };
+    setSettings(updatedSettings);
+    await saveSettings(updatedSettings);
+    setSaveStatus(true);
+    setTimeout(() => setSaveStatus(null), 2000);
   };
-
-  const symlinkCmd1 = `cmd /c mklink /d "C:\\Users\\trann\\Downloads\\discord-video-bot-broll" "D:\\videos\\broll"`;
-  const symlinkCmd2 = `cmd /c mklink /d "c:\\Users\\trann\\Desktop\\Learning\\discord-video-bot\\broll" "D:\\videos\\broll"`;
 
   return (
     <div className="min-h-screen bg-app-bg text-app-text py-10 px-4 md:px-8">
@@ -198,124 +199,72 @@ export const OptionsApp: React.FC = () => {
             </section>
           </div>
 
-          {/* Right Column: Symlink Instructions */}
+          {/* Right Column: Download Folder Config */}
           <div className="lg:col-span-2 space-y-6">
             <section className="glass-effect p-6 rounded-2xl border border-app-border/40 space-y-6">
               
               {/* Title */}
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-3">
-                <Terminal className="w-4.5 h-4.5 text-app-primary" />
-                <span>Hướng dẫn liên kết Symlink 2 chiều sang Ổ D</span>
+                <FolderOpen className="w-4.5 h-4.5 text-app-primary" />
+                <span>Cấu Hình Thư Mục Tải Xuống (Download Folder)</span>
               </div>
 
-              {/* Alert context */}
-              <div className="bg-app-accent/10 border border-app-accent/20 rounded-xl p-4 flex gap-3 text-xs text-app-text-muted leading-relaxed">
-                <AlertCircle className="w-5 h-5 text-app-accent flex-shrink-0" />
-                <div>
-                  <span className="font-bold text-app-text">Tại sao phải tạo Symlink? </span> 
-                  Trình duyệt Chrome chỉ cho phép lưu file tải xuống trong thư mục <b>Downloads</b> do cơ chế Sandbox bảo mật. 
-                  Để video tự động tải về <b>ổ D</b> (tiết kiệm ổ C) và lập tức xuất hiện trong thư mục của <b>Discord Bot</b>, 
-                  chúng ta chỉ cần thiết lập Symlink <b>1 lần duy nhất</b> trên Windows!
-                </div>
-              </div>
-
-              {/* Step By Step */}
-              <div className="space-y-6">
-                
-                {/* Step 1 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-app-text">
-                    <span className="w-5 h-5 rounded-full bg-app-bg-hover border border-app-border flex items-center justify-center text-app-accent text-[10px]">1</span>
-                    <span>Tạo thư mục tài nguyên chính trên ổ D</span>
-                  </div>
-                  <p className="text-xs text-app-text-muted pl-7">
-                    Mở <b>File Explorer</b> trên Windows và tạo một thư mục trống tại đường dẫn: 
-                    <code className="mx-1 bg-app-bg-card px-1.5 py-0.5 rounded border border-app-border text-app-accent font-semibold">D:\videos\broll</code>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-app-text">Đường dẫn thư mục gốc tải xuống</label>
+                  <p className="text-[11px] text-app-text-muted leading-relaxed">
+                    Chrome chỉ cho phép tải xuống vào thư mục <b>Downloads</b>. 
+                    Nhập tên thư mục con ở đây làm thư mục lưu trữ (hoặc liên kết Symlink). 
+                    Để trống nếu muốn tải trực tiếp vào thư mục Downloads gốc.
                   </p>
                 </div>
 
-                {/* Step 2 */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-app-text">
-                    <span className="w-5 h-5 rounded-full bg-app-bg-hover border border-app-border flex items-center justify-center text-app-accent text-[10px]">2</span>
-                    <span>Tạo liên kết từ Chrome Downloads sang Ổ D</span>
+                <div className="flex gap-2.5 items-center">
+                  <input
+                    type="text"
+                    placeholder="discord-video-bot-broll"
+                    value={downloadFolderInput}
+                    onChange={(e) => setDownloadFolderInput(e.target.value)}
+                    className="flex-1 bg-app-bg-card border border-app-border rounded-xl px-3 py-2.5 text-xs text-app-text focus:outline-none focus:border-app-accent/80 transition-colors font-mono"
+                  />
+                  <button
+                    onClick={handleSaveDownloadFolder}
+                    className="px-4 py-2.5 bg-app-accent hover:bg-app-accent-hover text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0"
+                  >
+                    {saveStatus ? <Check className="w-3.5 h-3.5" /> : null}
+                    {saveStatus ? 'Đã lưu!' : 'Lưu cấu hình'}
+                  </button>
+                </div>
+
+                {/* Path Visualizer */}
+                <div className="bg-app-bg-card/30 border border-app-border/40 rounded-xl p-4.5 mt-2 space-y-3">
+                  <div className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider">
+                    Sơ đồ đường dẫn lưu trữ thực tế trên máy tính
                   </div>
-                  <p className="text-xs text-app-text-muted pl-7">
-                    Nhấp nút tìm kiếm trên Windows, gõ <b>CMD</b>, nhấp chuột phải và chọn <b>Run as Administrator</b> (Chạy với quyền Admin). 
-                    Sao chép dòng lệnh dưới đây và chạy trong CMD:
-                  </p>
                   
-                  {/* Code box 1 */}
-                  <div className="pl-7">
-                    <div className="relative bg-app-bg-card border border-app-border rounded-xl p-3.5 font-mono text-[11px] leading-relaxed group">
-                      <code className="text-app-accent block pr-12 select-all">{symlinkCmd1}</code>
-                      <button
-                        onClick={() => handleCopyCmd(symlinkCmd1, 'cmd1')}
-                        className="absolute right-3 top-3 p-1.5 bg-app-bg-hover hover:bg-app-border text-app-text-muted hover:text-app-text rounded-lg border border-app-border/40 transition-colors"
-                        title="Copy command"
-                      >
-                        {copiedCmd === 'cmd1' ? <Check className="w-3.5 h-3.5 text-app-success" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
+                  <div className="font-mono text-xs text-app-text-muted leading-relaxed space-y-1 pl-1 bg-app-bg-card/50 p-3 rounded-lg border border-app-border/20">
+                    <div className="text-app-text">📁 Downloads/</div>
+                    {downloadFolderInput.trim() && (
+                      <div className="pl-4 text-app-accent">
+                        └── 📁 {downloadFolderInput.trim()}/ <span className="text-[10px] text-app-text-muted font-sans font-medium">(Thư mục gốc bạn cài đặt)</span>
+                      </div>
+                    )}
+                    <div className={downloadFolderInput.trim() ? "pl-8 text-app-primary" : "pl-4 text-app-primary"}>
+                      └── 📁 [tag] / <span className="text-[10px] text-app-text-muted font-sans font-medium">(Tên tag, vd: dance, motivation, lofi...)</span>
+                    </div>
+                    <div className={downloadFolderInput.trim() ? "pl-12 text-app-text" : "pl-8 text-app-text"}>
+                      └── 🎥 pinterest_id_timestamp__[tags].mp4
                     </div>
                   </div>
                 </div>
 
-                {/* Step 3 */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-app-text">
-                    <span className="w-5 h-5 rounded-full bg-app-bg-hover border border-app-border flex items-center justify-center text-app-accent text-[10px]">3</span>
-                    <span>Tạo liên kết từ Discord Bot sang Ổ D</span>
-                  </div>
-                  <p className="text-xs text-app-text-muted pl-7">
-                    Tiếp tục chạy dòng lệnh sau trong CMD (quyền Admin) để liên kết thư mục tài nguyên của Discord Bot tới cùng thư mục ổ D:
-                  </p>
-                  
-                  {/* Code box 2 */}
-                  <div className="pl-7">
-                    <div className="relative bg-app-bg-card border border-app-border rounded-xl p-3.5 font-mono text-[11px] leading-relaxed group">
-                      <code className="text-app-accent block pr-12 select-all">{symlinkCmd2}</code>
-                      <button
-                        onClick={() => handleCopyCmd(symlinkCmd2, 'cmd2')}
-                        className="absolute right-3 top-3 p-1.5 bg-app-bg-hover hover:bg-app-border text-app-text-muted hover:text-app-text rounded-lg border border-app-border/40 transition-colors"
-                        title="Copy command"
-                      >
-                        {copiedCmd === 'cmd2' ? <Check className="w-3.5 h-3.5 text-app-success" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
+                <div className="bg-app-accent/10 border border-app-accent/20 rounded-xl p-4 flex gap-3 text-xs text-app-text-muted leading-relaxed">
+                  <AlertCircle className="w-5 h-5 text-app-accent flex-shrink-0" />
+                  <div>
+                    <span className="font-bold text-app-text">Lưu ý về đồng bộ Discord Bot: </span> 
+                    Để tự động đưa video vào Discord Bot của bạn, bạn có thể tạo Symlink trỏ thư mục trên của Chrome sang thư mục broll của bot. Mặc định nếu không thiết lập, thư mục gốc sẽ là <code>discord-video-bot-broll</code>.
                   </div>
                 </div>
-
-                {/* Architecture visualization */}
-                <div className="pl-7 pt-2">
-                  <div className="bg-app-bg-card/30 border border-app-border/40 rounded-xl p-4 space-y-3">
-                    <div className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider flex items-center gap-1">
-                      <FolderOpen className="w-3.5 h-3.5 text-app-accent" />
-                      Sơ đồ hoạt động sau khi cấu hình
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-[11px] font-medium text-app-text-muted py-2 px-1">
-                      <div className="flex flex-col items-center gap-1.5 bg-app-bg-card border border-app-border px-3 py-2 rounded-lg">
-                        <span className="text-app-text">1. Pinterest Ext</span>
-                        <span className="text-[9px]">Tải file vào folder tag</span>
-                      </div>
-                      
-                      <ArrowRight className="w-4 h-4 text-app-accent" />
-                      
-                      <div className="flex flex-col items-center gap-1.5 bg-gradient-to-r from-app-accent/15 to-app-primary/15 border border-app-accent/30 px-3.5 py-2.5 rounded-xl text-center">
-                        <span className="text-app-text font-bold">2. Lưu ở Ổ D (D:\\videos\\broll)</span>
-                        <span className="text-[9px]">Video phân cấp theo hashtag</span>
-                      </div>
-                      
-                      <ArrowRight className="w-4 h-4 text-app-accent" />
-                      
-                      <div className="flex flex-col items-center gap-1.5 bg-app-bg-card border border-app-border px-3 py-2 rounded-lg">
-                        <span className="text-app-text">3. Discord Video Bot</span>
-                        <span className="text-[9px]">Tự động đọc video dựng phim</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
             </section>

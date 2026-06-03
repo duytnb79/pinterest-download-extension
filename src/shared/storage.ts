@@ -91,9 +91,14 @@ export async function getSettings(): Promise<ExtensionSettings> {
   const defaultSettings: ExtensionSettings = {
     presetTags: DEFAULT_PRESET_TAGS,
     defaultTag: 'default',
-    videoOnly: true // Mặc định bật Chỉ xử lý Video, ẩn hoàn toàn nút trên hình ảnh
+    videoOnly: true, // Mặc định bật Chỉ xử lý Video, ẩn hoàn toàn nút trên hình ảnh
+    downloadFolder: 'discord-video-bot-broll'
   };
-  return result[STORAGE_KEYS.SETTINGS] || defaultSettings;
+  const settings = result[STORAGE_KEYS.SETTINGS] || defaultSettings;
+  if (settings.downloadFolder === undefined) {
+    settings.downloadFolder = 'discord-video-bot-broll';
+  }
+  return settings;
 }
 
 export async function saveSettings(settings: ExtensionSettings): Promise<void> {

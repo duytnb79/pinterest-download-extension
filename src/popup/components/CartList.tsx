@@ -31,11 +31,12 @@ export const CartList: React.FC<CartListProps> = ({
   const [customTagInput, setCustomTagInput] = useState('');
 
   const handleCustomTagSubmit = (id: string) => {
-    if (customTagInput.trim()) {
-      onUpdateTag(id, customTagInput.trim());
-      setEditingId(null);
-      setCustomTagInput('');
+    const trimmed = customTagInput.trim();
+    if (trimmed) {
+      onUpdateTag(id, trimmed);
     }
+    setEditingId(null);
+    setCustomTagInput('');
   };
 
   if (items.length === 0) {
@@ -103,6 +104,7 @@ export const CartList: React.FC<CartListProps> = ({
                     onChange={(e) => setCustomTagInput(e.target.value)}
                     className="w-full max-w-[90px] bg-app-bg border border-app-border rounded px-1.5 py-0.5 text-[10px] text-app-text focus:outline-none"
                     autoFocus
+                    onBlur={() => handleCustomTagSubmit(item.id)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleCustomTagSubmit(item.id);
                       if (e.key === 'Escape') setEditingId(null);

@@ -306,8 +306,18 @@ async function downloadItem(item: CartItem): Promise<void> {
         taggedSafeName = `${safeName}__${tagsSuffix}`;
       }
     }
+    // Lấy cấu hình settings để đọc đường dẫn thư mục tải
+    const settingsData = await chrome.storage.local.get('video_ext_settings');
+    const settings = settingsData.video_ext_settings || {};
+    const rawFolder = settings.downloadFolder !== undefined ? settings.downloadFolder : 'discord-video-bot-broll';
+    const downloadFolder = rawFolder.trim().replace(/\/+$/, ''); // Loại bỏ gạch chéo cuối nếu có
 
-    const filename = `${cleanTag}/${taggedSafeName}`;
+    let filename = '';
+    if (downloadFolder) {
+      filename = `${downloadFolder}/${cleanTag}/${taggedSafeName}`;
+    } else {
+      filename = `${cleanTag}/${taggedSafeName}`;
+    }
     console.log(`[video-ext] Bắt đầu tải file có chứa tags: ${finalUrl} -> ${filename}`);
 
     // Tải file video duy nhất
