@@ -174,12 +174,12 @@ async function injectDownloadOverlay(containerEl: HTMLElement, media: PinterestM
 
   const cartBtn = document.createElement('button');
   cartBtn.className = 'video-ext-btn video-ext-btn-cart';
-  cartBtn.setAttribute('data-tooltip', 'Thêm vào giỏ hàng');
+  cartBtn.setAttribute('data-tooltip', 'Add to Queue');
   cartBtn.innerHTML = ICONS.cart;
 
   const dlBtn = document.createElement('button');
   dlBtn.className = 'video-ext-btn video-ext-btn-dl';
-  dlBtn.setAttribute('data-tooltip', media.type === 'video' ? 'Tải ngay (Video)' : 'Tải ngay (Ảnh gốc)');
+  dlBtn.setAttribute('data-tooltip', media.type === 'video' ? 'Download Now (Video)' : 'Download Now (Image)');
   dlBtn.innerHTML = ICONS.download;
 
   overlay.appendChild(badge);
@@ -198,11 +198,11 @@ async function injectDownloadOverlay(containerEl: HTMLElement, media: PinterestM
       if (isAlreadyInCart) {
         cartBtn.classList.add('added');
         cartBtn.innerHTML = ICONS.check;
-        cartBtn.setAttribute('data-tooltip', 'Đã trong giỏ hàng');
+        cartBtn.setAttribute('data-tooltip', 'In Queue');
       } else {
         cartBtn.classList.remove('added');
         cartBtn.innerHTML = ICONS.cart;
-        cartBtn.setAttribute('data-tooltip', 'Thêm vào giỏ hàng');
+        cartBtn.setAttribute('data-tooltip', 'Add to Queue');
       }
     } catch (e) {}
 
@@ -215,11 +215,11 @@ async function injectDownloadOverlay(containerEl: HTMLElement, media: PinterestM
         dlBtn.classList.add('completed');
         dlBtn.classList.remove('loading');
         dlBtn.innerHTML = ICONS.check;
-        dlBtn.setAttribute('data-tooltip', 'Đã tải xuống thành công!');
+        dlBtn.setAttribute('data-tooltip', 'Downloaded successfully!');
       } else {
         dlBtn.classList.remove('completed', 'loading');
         dlBtn.innerHTML = ICONS.download;
-        dlBtn.setAttribute('data-tooltip', media.type === 'video' ? 'Tải ngay (Video)' : 'Tải ngay (Ảnh gốc)');
+        dlBtn.setAttribute('data-tooltip', media.type === 'video' ? 'Download now (Video)' : 'Download now (Image)');
       }
     } catch (e) {}
   };
@@ -253,7 +253,7 @@ async function injectDownloadOverlay(containerEl: HTMLElement, media: PinterestM
       
       cartBtn.classList.add('added');
       cartBtn.innerHTML = ICONS.check;
-      cartBtn.setAttribute('data-tooltip', 'Đã thêm thành công!');
+      cartBtn.setAttribute('data-tooltip', 'Added successfully!');
       
       window.dispatchEvent(new CustomEvent('video-ext-sync-ui', { detail: { id: media.id } }));
     } catch (err) {
@@ -287,7 +287,7 @@ async function injectDownloadOverlay(containerEl: HTMLElement, media: PinterestM
     
     dlBtn.classList.add('loading');
     dlBtn.innerHTML = ICONS.spinner;
-    dlBtn.setAttribute('data-tooltip', 'Đang tải file xuống...');
+    dlBtn.setAttribute('data-tooltip', 'Downloading...');
   });
 
   // Lắng nghe sự kiện đồng bộ UI

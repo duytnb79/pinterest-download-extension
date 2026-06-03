@@ -42,7 +42,7 @@ export const OptionsApp: React.FC = () => {
     const tag = newTag.trim().toLowerCase();
     if (!tag) return;
     if (settings.presetTags.includes(tag)) {
-      alert('Tag này đã tồn tại!');
+      alert('This tag already exists!');
       return;
     }
 
@@ -55,7 +55,7 @@ export const OptionsApp: React.FC = () => {
 
   const handleRemoveTag = async (tagToRemove: string) => {
     if (tagToRemove === 'default') {
-      alert('Không thể xóa tag "default" mặc định!');
+      alert('Cannot delete the default "default" tag!');
       return;
     }
 
@@ -94,8 +94,8 @@ export const OptionsApp: React.FC = () => {
             <Settings className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-wide uppercase">Cấu hình Pinterest Manager</h1>
-            <p className="text-xs text-app-text-muted">Quản lý phân cấp thư mục B-Roll và tự động hóa đồng bộ với Discord Bot</p>
+            <h1 className="text-xl font-bold tracking-wide uppercase">Pinterest Manager Settings</h1>
+            <p className="text-xs text-app-text-muted">Manage B-Roll directories and automate asset synchronization for Discord Bots</p>
           </div>
         </header>
 
@@ -108,12 +108,12 @@ export const OptionsApp: React.FC = () => {
             <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
                 <Video className="w-4 h-4 text-app-primary" />
-                <span>Bộ Lọc Media (Tối ưu B-Roll)</span>
+                <span>Media Filter (B-Roll Optimizer)</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-semibold">Ẩn bài viết hình ảnh</span>
-                  <span className="text-[10px] text-app-text-muted">Ẩn hoàn toàn các bài viết ảnh tĩnh trên Pinterest, chỉ giữ lại video</span>
+                  <span className="text-xs font-semibold">Hide Static Images</span>
+                  <span className="text-[10px] text-app-text-muted">Completely hide static image pins on Pinterest, leaving only videos</span>
                 </div>
                 <button
                   onClick={handleToggleVideoOnly}
@@ -127,14 +127,14 @@ export const OptionsApp: React.FC = () => {
             <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
                 <TagIcon className="w-4 h-4 text-app-accent" />
-                <span>Quản Lý Thẻ (Tags / Hashtags)</span>
+                <span>Tag Management (Tags / Hashtags)</span>
               </div>
 
               {/* Add tag */}
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Thêm tag mới..."
+                  placeholder="Add new tag..."
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && void handleAddTag()}
@@ -155,13 +155,13 @@ export const OptionsApp: React.FC = () => {
                   <span className="font-semibold text-app-text-muted">#default</span>
                   <div className="flex items-center gap-2">
                     {settings.defaultTag === 'default' ? (
-                      <span className="text-[10px] bg-app-accent/20 text-app-accent px-2 py-0.5 rounded-full font-bold">Mặc định</span>
+                      <span className="text-[10px] bg-app-accent/20 text-app-accent px-2 py-0.5 rounded-full font-bold">Default</span>
                     ) : (
                       <button
                         onClick={() => void handleSetDefaultTag('default')}
                         className="text-[10px] text-app-text-muted hover:text-app-accent transition-colors font-medium"
                       >
-                        Đặt mặc định
+                        Set Default
                       </button>
                     )}
                   </div>
@@ -176,19 +176,19 @@ export const OptionsApp: React.FC = () => {
                     <span className="font-medium">#{tag}</span>
                     <div className="flex items-center gap-2.5">
                       {settings.defaultTag === tag ? (
-                        <span className="text-[10px] bg-app-accent/20 text-app-accent px-2 py-0.5 rounded-full font-bold">Mặc định</span>
+                        <span className="text-[10px] bg-app-accent/20 text-app-accent px-2 py-0.5 rounded-full font-bold">Default</span>
                       ) : (
                         <button
                           onClick={() => void handleSetDefaultTag(tag)}
                           className="text-[10px] text-app-text-muted hover:text-app-accent transition-colors font-medium"
                         >
-                          Đặt mặc định
+                          Set Default
                         </button>
                       )}
                       <button
                         onClick={() => void handleRemoveTag(tag)}
                         className="text-app-text-muted hover:text-app-danger transition-colors"
-                        title="Xóa tag này"
+                        title="Delete tag"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -206,16 +206,16 @@ export const OptionsApp: React.FC = () => {
               {/* Title */}
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-3">
                 <FolderOpen className="w-4.5 h-4.5 text-app-primary" />
-                <span>Cấu Hình Thư Mục Tải Xuống (Download Folder)</span>
+                <span>Download Folder Configuration</span>
               </div>
 
               <div className="space-y-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-app-text">Đường dẫn thư mục gốc tải xuống</label>
+                  <label className="text-xs font-semibold text-app-text">Root download folder path</label>
                   <p className="text-[11px] text-app-text-muted leading-relaxed">
-                    Chrome chỉ cho phép tải xuống vào thư mục <b>Downloads</b>. 
-                    Nhập tên thư mục con ở đây làm thư mục lưu trữ (hoặc liên kết Symlink). 
-                    Để trống nếu muốn tải trực tiếp vào thư mục Downloads gốc.
+                    Chrome only permits downloads inside the default <b>Downloads</b> directory. 
+                    Enter a subfolder name here to organize your files. 
+                    Leave blank to download directly to the root Downloads folder.
                   </p>
                 </div>
 
@@ -232,25 +232,25 @@ export const OptionsApp: React.FC = () => {
                     className="px-4 py-2.5 bg-app-accent hover:bg-app-accent-hover text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0"
                   >
                     {saveStatus ? <Check className="w-3.5 h-3.5" /> : null}
-                    {saveStatus ? 'Đã lưu!' : 'Lưu cấu hình'}
+                    {saveStatus ? 'Saved!' : 'Save Settings'}
                   </button>
                 </div>
 
                 {/* Path Visualizer */}
                 <div className="bg-app-bg-card/30 border border-app-border/40 rounded-xl p-4.5 mt-2 space-y-3">
                   <div className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider">
-                    Sơ đồ đường dẫn lưu trữ thực tế trên máy tính
+                    Visualized local file directory layout
                   </div>
                   
                   <div className="font-mono text-xs text-app-text-muted leading-relaxed space-y-1 pl-1 bg-app-bg-card/50 p-3 rounded-lg border border-app-border/20">
                     <div className="text-app-text">📁 Downloads/</div>
                     {downloadFolderInput.trim() && (
                       <div className="pl-4 text-app-accent">
-                        └── 📁 {downloadFolderInput.trim()}/ <span className="text-[10px] text-app-text-muted font-sans font-medium">(Thư mục gốc bạn cài đặt)</span>
+                        └── 📁 {downloadFolderInput.trim()}/ <span className="text-[10px] text-app-text-muted font-sans font-medium">(Your custom base folder)</span>
                       </div>
                     )}
                     <div className={downloadFolderInput.trim() ? "pl-8 text-app-primary" : "pl-4 text-app-primary"}>
-                      └── 📁 [tag] / <span className="text-[10px] text-app-text-muted font-sans font-medium">(Tên tag, vd: dance, motivation, lofi...)</span>
+                      └── 📁 [tag] / <span className="text-[10px] text-app-text-muted font-sans font-medium">(Tag name, e.g. dance, motivation, lofi...)</span>
                     </div>
                     <div className={downloadFolderInput.trim() ? "pl-12 text-app-text" : "pl-8 text-app-text"}>
                       └── 🎥 pinterest_id_timestamp__[tags].mp4
@@ -261,12 +261,11 @@ export const OptionsApp: React.FC = () => {
                 <div className="bg-app-accent/10 border border-app-accent/20 rounded-xl p-4 flex gap-3 text-xs text-app-text-muted leading-relaxed">
                   <AlertCircle className="w-5 h-5 text-app-accent flex-shrink-0" />
                   <div>
-                    <span className="font-bold text-app-text">Lưu ý về đồng bộ Discord Bot: </span> 
-                    Để tự động đưa video vào Discord Bot của bạn, bạn có thể tạo Symlink trỏ thư mục trên của Chrome sang thư mục broll của bot. Mặc định nếu không thiết lập, thư mục gốc sẽ là <code>discord-video-bot-broll</code>.
+                    <span className="font-bold text-app-text">Discord Bot Synchronization Note: </span> 
+                    To automatically feed downloaded files into your Discord Bot, you can create a Symlink from the Chrome downloads subfolder to your bot's broll directory. The default path is <code>discord-video-bot-broll</code>.
                   </div>
                 </div>
               </div>
-
             </section>
           </div>
 

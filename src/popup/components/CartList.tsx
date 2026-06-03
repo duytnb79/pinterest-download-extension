@@ -45,9 +45,9 @@ export const CartList: React.FC<CartListProps> = ({
         <div className="w-12 h-12 rounded-full bg-app-bg-hover border border-app-border flex items-center justify-center mb-3">
           <Clock className="w-6 h-6 text-app-text-muted/60" />
         </div>
-        <p className="text-xs font-semibold text-app-text mb-1">Giỏ hàng đang trống</p>
+        <p className="text-xs font-semibold text-app-text mb-1">Queue is empty</p>
         <p className="text-[11px] text-app-text-muted max-w-[280px]">
-          Hãy truy cập Pinterest, rê chuột lên các video hoặc hình ảnh và nhấn nút để thêm vào giỏ hàng.
+          Visit Pinterest and click the download or cart buttons on media cards to populate your queue.
         </p>
       </div>
     );
@@ -114,7 +114,7 @@ export const CartList: React.FC<CartListProps> = ({
                     onClick={() => handleCustomTagSubmit(item.id)}
                     className="px-1.5 py-0.5 text-[9px] bg-app-accent text-white rounded font-medium"
                   >
-                    Lưu
+                    Save
                   </button>
                 </div>
               ) : (
@@ -135,7 +135,7 @@ export const CartList: React.FC<CartListProps> = ({
                     {presetTags.filter(t => t !== item.tag).map(t => (
                       <option key={t} value={t}>#{t}</option>
                     ))}
-                    <option value="__custom__">+ Tag mới...</option>
+                    <option value="__custom__">+ Custom Tag...</option>
                   </select>
                 </div>
               )}
@@ -147,25 +147,25 @@ export const CartList: React.FC<CartListProps> = ({
             {item.status === 'pending' && (
               <div className="tooltip-container">
                 <Clock className="w-4 h-4 text-app-text-muted/60" />
-                <span className="tooltip-text">Chờ tải xuống</span>
+                <span className="tooltip-text">Pending download</span>
               </div>
             )}
             {item.status === 'downloading' && (
               <div className="tooltip-container">
                 <Loader2 className="w-4 h-4 text-app-accent animate-spin" />
-                <span className="tooltip-text">Đang tải...</span>
+                <span className="tooltip-text">Downloading...</span>
               </div>
             )}
             {item.status === 'completed' && (
               <div className="tooltip-container">
                 <CheckCircle className="w-4 h-4 text-app-success" />
-                <span className="tooltip-text">Tải thành công!</span>
+                <span className="tooltip-text">Downloaded!</span>
               </div>
             )}
             {item.status === 'failed' && (
               <div className="tooltip-container">
                 <AlertTriangle className="w-4 h-4 text-app-danger" />
-                <span className="tooltip-text">{item.error || 'Tải thất bại'}</span>
+                <span className="tooltip-text">{item.error || 'Download failed'}</span>
               </div>
             )}
 
@@ -175,7 +175,7 @@ export const CartList: React.FC<CartListProps> = ({
                 <button
                   onClick={() => onDownloadItem(item)}
                   className="p-1 hover:bg-app-bg-hover text-app-text-muted hover:text-app-text rounded-lg transition-colors"
-                  title="Tải riêng mục này"
+                  title="Download this item"
                 >
                   <Download className="w-3.5 h-3.5" />
                 </button>
@@ -185,7 +185,7 @@ export const CartList: React.FC<CartListProps> = ({
                 onClick={() => onRemove(item.id)}
                 disabled={item.status === 'downloading'}
                 className="p-1 hover:bg-app-bg-hover text-app-text-muted hover:text-app-danger disabled:opacity-30 disabled:pointer-events-none rounded-lg transition-colors"
-                title="Xóa khỏi giỏ"
+                title="Remove from queue"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

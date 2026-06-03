@@ -135,7 +135,7 @@ export const PopupApp: React.FC = () => {
   };
 
   const handleClearCart = async () => {
-    if (window.confirm('Bạn có chắc muốn dọn sạch giỏ hàng không?')) {
+    if (window.confirm('Are you sure you want to clear the download queue?')) {
       await clearCart();
       setItems([]);
       void chrome.runtime.sendMessage({ type: 'UPDATE_BADGE' });
@@ -166,7 +166,7 @@ export const PopupApp: React.FC = () => {
         <button
           onClick={handleOpenOptions}
           className="p-1.5 bg-app-bg-hover hover:bg-app-border text-app-text-muted hover:text-app-text rounded-lg border border-app-border/40 hover:border-app-border transition-all duration-200"
-          title="Cấu hình & Hướng dẫn Symlink"
+          title="Configuration & Folder Settings"
         >
           <Settings className="w-3.5 h-3.5" />
         </button>
@@ -188,11 +188,11 @@ export const PopupApp: React.FC = () => {
           <div className="flex items-center justify-between mb-2 px-1 text-[11px] font-bold text-app-text-muted uppercase tracking-wider">
             <span className="flex items-center gap-1">
               <Layers className="w-3 h-3 text-app-accent" />
-              Danh sách hàng chờ ({totalCount})
+              Download Queue ({totalCount})
             </span>
             {pendingCount > 0 && (
               <span className="text-[10px] text-app-accent lowercase font-medium">
-                ({pendingCount} chờ tải)
+                ({pendingCount} pending)
               </span>
             )}
           </div>
@@ -209,7 +209,7 @@ export const PopupApp: React.FC = () => {
         {/* Global Progress Bar */}
         {isDownloading && (
           <div className="mt-3 px-1">
-            <ProgressBar progress={downloadProgress} label="Đang tải giỏ hàng..." />
+            <ProgressBar progress={downloadProgress} label="Downloading queue..." />
           </div>
         )}
       </main>
@@ -223,7 +223,7 @@ export const PopupApp: React.FC = () => {
             className="flex items-center justify-center gap-1.5 px-3 py-2 bg-app-bg-hover hover:bg-app-danger/10 text-app-text-muted hover:text-app-danger disabled:opacity-30 disabled:pointer-events-none text-xs font-semibold rounded-xl border border-app-border/50 hover:border-app-danger/30 transition-all duration-200"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Xóa giỏ</span>
+            <span>Clear Queue</span>
           </button>
 
           <button
@@ -232,7 +232,7 @@ export const PopupApp: React.FC = () => {
             className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-app-accent to-app-accent-hover disabled:from-app-border disabled:to-app-border hover:shadow-lg hover:shadow-app-accent/20 text-white disabled:text-app-text-muted/50 disabled:cursor-not-allowed text-xs font-bold rounded-xl transition-all duration-200"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Tải hàng loạt ({pendingCount})</span>
+            <span>Download Batch ({pendingCount})</span>
           </button>
         </footer>
       )}
