@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pinterest Downloader & Tag Manager",
-  "description": "Compact premium extension to download and tag Pinterest media for Discord Bot automation.",
+  "description": "Compact premium extension to download and tag Pinterest media for automation.",
   "version": "0.1.0",
   "icons": {
     "16": "assets/icon16.png",

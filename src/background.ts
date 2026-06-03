@@ -302,7 +302,7 @@ async function downloadItem(item: CartItem): Promise<void> {
     // Read download folder options
     const settingsData = await chrome.storage.local.get('video_ext_settings');
     const settings = settingsData.video_ext_settings || {};
-    const rawFolder = settings.downloadFolder !== undefined ? settings.downloadFolder : 'discord-video-bot-broll';
+    const rawFolder = settings.downloadFolder !== undefined ? settings.downloadFolder : 'pinterest-downloads';
     const downloadFolder = rawFolder.trim().replace(/\/+$/, '');
 
     let filename = '';

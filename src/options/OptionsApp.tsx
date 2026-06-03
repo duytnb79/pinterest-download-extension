@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Tag as TagIcon, 
-  Terminal, 
-  Copy, 
-  Check, 
-  Plus, 
-  Trash2, 
-  Settings, 
-  AlertCircle, 
+import {
+  Tag as TagIcon,
+  Terminal,
+  Copy,
+  Check,
+  Plus,
+  Trash2,
+  Settings,
+  AlertCircle,
   ArrowRight,
   ExternalLink,
   FolderOpen,
@@ -17,7 +17,7 @@ import { getSettings, saveSettings } from '../shared/storage';
 import { ExtensionSettings } from '../shared/types';
 
 export const OptionsApp: React.FC = () => {
-  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default', videoOnly: true, downloadFolder: 'discord-video-bot-broll' });
+  const [settings, setSettings] = useState<ExtensionSettings>({ presetTags: [], defaultTag: 'default', videoOnly: true, downloadFolder: 'pinterest-downloads' });
   const [newTag, setNewTag] = useState('');
   const [downloadFolderInput, setDownloadFolderInput] = useState('');
   const [saveStatus, setSaveStatus] = useState<boolean | null>(null);
@@ -87,7 +87,7 @@ export const OptionsApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-bg text-app-text py-10 px-4 md:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <header className="flex items-center gap-3 border-b border-app-border/40 pb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-app-primary to-app-accent flex items-center justify-center shadow-lg shadow-app-primary/10">
@@ -95,15 +95,15 @@ export const OptionsApp: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-wide uppercase">Pinterest Manager Settings</h1>
-            <p className="text-xs text-app-text-muted">Manage B-Roll directories and automate asset synchronization for Discord Bots</p>
+            <p className="text-xs text-app-text-muted">Manage B-Roll directories and automate asset synchronization</p>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column: Tag Management & Settings */}
           <div className="lg:col-span-1 space-y-6">
-            
+
             {/* Bộ Lọc Media */}
             <section className="glass-effect p-5 rounded-2xl border border-app-border/40 space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-2">
@@ -169,7 +169,7 @@ export const OptionsApp: React.FC = () => {
 
                 {/* Preset tags */}
                 {settings.presetTags.map(tag => (
-                  <div 
+                  <div
                     key={tag}
                     className="flex items-center justify-between bg-app-bg-card hover:bg-app-bg-hover border border-app-border/30 rounded-xl px-3 py-2 text-xs transition-colors"
                   >
@@ -202,7 +202,7 @@ export const OptionsApp: React.FC = () => {
           {/* Right Column: Download Folder Config */}
           <div className="lg:col-span-2 space-y-6">
             <section className="glass-effect p-6 rounded-2xl border border-app-border/40 space-y-6">
-              
+
               {/* Title */}
               <div className="flex items-center gap-2 text-sm font-bold border-b border-app-border/30 pb-3">
                 <FolderOpen className="w-4.5 h-4.5 text-app-primary" />
@@ -213,8 +213,8 @@ export const OptionsApp: React.FC = () => {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-app-text">Root download folder path</label>
                   <p className="text-[11px] text-app-text-muted leading-relaxed">
-                    Chrome only permits downloads inside the default <b>Downloads</b> directory. 
-                    Enter a subfolder name here to organize your files. 
+                    Chrome only permits downloads inside the default <b>Downloads</b> directory.
+                    Enter a subfolder name here to organize your files.
                     Leave blank to download directly to the root Downloads folder.
                   </p>
                 </div>
@@ -222,7 +222,7 @@ export const OptionsApp: React.FC = () => {
                 <div className="flex gap-2.5 items-center">
                   <input
                     type="text"
-                    placeholder="discord-video-bot-broll"
+                    placeholder="pinterest-downloads"
                     value={downloadFolderInput}
                     onChange={(e) => setDownloadFolderInput(e.target.value)}
                     className="flex-1 bg-app-bg-card border border-app-border rounded-xl px-3 py-2.5 text-xs text-app-text focus:outline-none focus:border-app-accent/80 transition-colors font-mono"
@@ -241,7 +241,7 @@ export const OptionsApp: React.FC = () => {
                   <div className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider">
                     Visualized local file directory layout
                   </div>
-                  
+
                   <div className="font-mono text-xs text-app-text-muted leading-relaxed space-y-1 pl-1 bg-app-bg-card/50 p-3 rounded-lg border border-app-border/20">
                     <div className="text-app-text">📁 Downloads/</div>
                     {downloadFolderInput.trim() && (
@@ -261,8 +261,8 @@ export const OptionsApp: React.FC = () => {
                 <div className="bg-app-accent/10 border border-app-accent/20 rounded-xl p-4 flex gap-3 text-xs text-app-text-muted leading-relaxed">
                   <AlertCircle className="w-5 h-5 text-app-accent flex-shrink-0" />
                   <div>
-                    <span className="font-bold text-app-text">Discord Bot Synchronization Note: </span> 
-                    To automatically feed downloaded files into your Discord Bot, you can create a Symlink from the Chrome downloads subfolder to your bot's broll directory. The default path is <code>discord-video-bot-broll</code>.
+                    <span className="font-bold text-app-text">Synchronization Note: </span>
+                    To automatically sync downloaded files, you can create a Symlink from the Chrome downloads subfolder to your preferred local storage directory or project folder.
                   </div>
                 </div>
               </div>

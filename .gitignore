@@ -36,4 +36,4 @@ dist
 .env
 .env.local
 
-extension.zip
+*.zip

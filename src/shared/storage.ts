@@ -92,11 +92,11 @@ export async function getSettings(): Promise<ExtensionSettings> {
     presetTags: DEFAULT_PRESET_TAGS,
     defaultTag: 'default',
     videoOnly: true, // Mặc định bật Chỉ xử lý Video, ẩn hoàn toàn nút trên hình ảnh
-    downloadFolder: 'discord-video-bot-broll'
+    downloadFolder: 'pinterest-downloads'
   };
   const settings = result[STORAGE_KEYS.SETTINGS] || defaultSettings;
   if (settings.downloadFolder === undefined) {
-    settings.downloadFolder = 'discord-video-bot-broll';
+    settings.downloadFolder = 'pinterest-downloads';
   }
   return settings;
 }

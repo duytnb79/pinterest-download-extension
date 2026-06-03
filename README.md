@@ -1,6 +1,6 @@
 # Pinterest Video & Image Downloader Extension
 
-A modern, intuitive Chrome Extension to easily download high-quality videos and images from Pinterest. Features a batch collection cart, smart media filtering, and custom base download paths (perfect for managing B-Roll assets for Discord video bots).
+A modern, premium Chrome Extension to easily download high-quality videos and images from Pinterest directly into custom predefined folders, automatically organized and categorized by tags/hashtags.
 
 Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb79)**.
 
@@ -8,12 +8,13 @@ Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb7
 
 ## 🌟 Key Features
 
-- **Direct Download Buttons**: Automatically embeds control widgets (`MP4/IMG` badges, cart, and direct download buttons) on top of media containers. No hover required to view download options.
-- **Auto Hashtag & Keyword Extraction**: Extracts hashtags, descriptions, and AI visual annotations directly from Pinterest's DOM metadata, automatically appending them to filenames for easy search.
-- **Batch Download Queue (Cart)**: Add multiple videos to a queue, assign specific or batch tags, and download all files at once with a single click.
-- **Custom Download Path Settings**: Configure custom subfolders (default: `discord-video-bot-broll`) within Chrome's default downloads directory. Fully compatible with local directory symlinks.
-- **Smart Media Grid Filter**: Instantly hides static images and automatically rearranges Pinterest's Masonry grid layout to provide a clean video-only browsing experience.
-- **Closeup Player Support**: Seamlessly supports closeup pages, allowing download overlays on main video players that use Blob streaming URLs, with automatic thumbnail poster recovery.
+- **Organized Directory Downloads**: Categorize your downloaded media into specific subfolders automatically based on tags/hashtags.
+- **Direct Download Controls**: Automatically embeds control widgets (`MP4/IMG` format badges, queue cart, and direct download buttons) on top of media cards without requiring hover.
+- **Auto Hashtag & Metadata Extraction**: Automatically extracts hashtags and metadata from Pinterest's DOM to include in the downloaded filenames for easy organization.
+- **Batch Download Queue (Cart)**: Add multiple items to a queue, assign specific or batch tags, and download everything at once with a single click.
+- **Custom Download Path Settings**: Configure custom subfolders (default: `pinterest-downloads`) within Chrome's default Downloads directory.
+- **Smart Media Filter**: Hide static image pins and automatically rearrange Pinterest's Masonry grid layout for a video-only browsing experience.
+- **Closeup View Integration**: Fully supports closeup pin pages, allowing direct downloads on main video players that use Blob streaming URLs.
 
 ---
 
@@ -26,7 +27,7 @@ Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb7
 
 ---
 
-## 🚀 Installation Guide (For Development)
+## 🚀 Installation Guide
 
 ### 1. Clone the Repository
 ```bash
@@ -54,12 +55,11 @@ This compiles the extension files into the `dist/` directory.
 
 ## 📖 Storage Hierarchy & Usage
 
-Google Chrome downloads are restricted to the local `Downloads` directory for security purposes. 
+For security, Google Chrome restricts downloads to the local `Downloads` directory. Files downloaded by this extension are organized into the following tree structure:
 
-Files downloaded by this extension will be organized according to the following tree:
 ```
 📁 Downloads/
- └── 📁 [Custom Download Folder]/      <-- Configured in Options (Default: discord-video-bot-broll)
+ └── 📁 [Custom Download Folder]/      <-- Configured in Options (Default: pinterest-downloads)
       └── 📁 [Media Tag]/              <-- E.g. dance, motivation, lofi, etc.
            └── 🎥 pinterest_id_timestamp__[tags].mp4
 ```
@@ -67,12 +67,12 @@ Files downloaded by this extension will be organized according to the following 
 ### Configuring Settings:
 1. Right-click the extension icon in Chrome -> select **Options**.
 2. Enter your desired base download directory. Leave blank to save files directly into your default Downloads folder.
-3. Click **Save Configuration**.
+3. Click **Save Settings**.
 
 ---
 
 ## 📄 License & Compliance
 
-This project is developed **strictly for private, educational, and personal backup purposes (Private & Educational Use Only)**. Commercial distribution or public redistribution is not recommended to ensure compliance with third-party copyright terms and conditions.
+This project is developed **strictly for private, educational, and personal backup purposes (Private & Educational Use Only)**. Public redistribution or commercial use is not recommended to ensure compliance with third-party copyright terms and conditions.
 
 Developed by **Duy Trần** - [github.com/duytnb79](https://github.com/duytnb79)
