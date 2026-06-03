@@ -11,8 +11,6 @@
 A modern, premium Chrome Extension to easily download high-quality videos and images from Pinterest directly into custom predefined folders, automatically organized and categorized by tags/hashtags.
 </p>
 
-Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb79)**.
-
 <video src="assets/guide.mp4" width="100%" controls autoplay loop muted></video>
 
 </div>
@@ -35,10 +33,10 @@ Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb7
 
 <div align="center">
   <h3>1. Direct Download Overlay on Pinterest Grid</h3>
-  <img src="assets/image_default.png" alt="Overlay Injected" width="90%" />
+  <img src="assets/image_default.png" alt="Overlay Injected" width="40%" />
   
   <h3>2. Download Queue & Tag Management Popup</h3>
-  <img src="assets/image_download.png" alt="Queue Cart" width="90%" />
+  <img src="assets/image_download.png" alt="Queue Cart" width="40%" />
   
   <h3>3. Configuration Options & Custom Paths</h3>
   <img src="assets/image_settings.png" alt="Options Settings" width="90%" />
