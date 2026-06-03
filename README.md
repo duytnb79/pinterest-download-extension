@@ -73,6 +73,6 @@ Trình duyệt Chrome chạy dưới cơ chế bảo mật Sandbox nên mọi fi
 
 ## 📄 Bản Quyền & Giấy Phép
 
-Dự án này được phát hành dưới Giấy phép MIT. Xem tệp `LICENSE` để biết thêm chi tiết.
+Dự án này được phát triển **phục vụ cho mục đích cá nhân, nghiên cứu học tập và lưu trữ nội bộ (Private & Educational Use Only)**. Vui lòng không phân phối công khai hoặc sử dụng cho mục đích thương mại để tuân thủ đầy đủ điều khoản bản quyền của bên thứ ba.
 
 Phát triển bởi **Duy Trần** - [github.com/duytnb79](https://github.com/duytnb79)
