@@ -280,7 +280,7 @@ cartBtn.addEventListener('click', async (evt) => {
 });
 
 // Xử lý Tải ngay
-dlBtn.addEventListener('click', (evt) => {
+dlBtn.addEventListener('click', async (evt) => {
   evt.preventDefault();
   evt.stopPropagation();
   
@@ -291,11 +291,17 @@ dlBtn.addEventListener('click', (evt) => {
   
   if (!currentMediaInfo) return;
   
+  let defaultTag = 'default';
+  try {
+    const settingsData = await chrome.storage.local.get('video_ext_settings');
+    defaultTag = settingsData.video_ext_settings?.defaultTag || 'default';
+  } catch (e) {}
+
   chrome.runtime.sendMessage({
     type: 'DOWNLOAD_SINGLE_ITEM',
     item: {
       ...currentMediaInfo,
-      tag: 'default',
+      tag: defaultTag,
       addedAt: Date.now(),
       status: 'pending'
     }
