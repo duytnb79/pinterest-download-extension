@@ -29,27 +29,36 @@ Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb7
 
 ## 🚀 Installation Guide
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/duytnb79/pinterest-download-extension.git
-cd pinterest-download-extension
-```
+### Option 1: Quick Install (From Releases - Recommended for Users)
+1. Go to the **Releases** page of this repository and download the latest `pinterest-downloader.zip`.
+2. Extract the downloaded zip file to a folder on your computer.
+3. Open Google Chrome and navigate to `chrome://extensions/`.
+4. Enable **Developer mode** in the top right corner.
+5. Click **Load unpacked** and select the extracted folder.
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+### Option 2: Build From Source (For Developers)
 
-### 3. Build the Project
-```bash
-npm run build
-```
-This compiles the extension files into the `dist/` directory.
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/duytnb79/pinterest-download-extension.git
+   cd pinterest-download-extension
+   ```
 
-### 4. Load the Extension in Google Chrome
-1. Open Google Chrome and navigate to `chrome://extensions/`.
-2. Enable **Developer mode** in the top right corner.
-3. Click **Load unpacked** and select the built `dist/` folder.
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Build the Project:**
+   ```bash
+   npm run build
+   ```
+   This compiles the extension files into the `dist/` directory.
+
+4. **Load the Extension in Google Chrome:**
+   1. Open Google Chrome and navigate to `chrome://extensions/`.
+   2. Enable **Developer mode** in the top right corner.
+   3. Click **Load unpacked** and select the built `dist/` folder.
 
 ---
 
