@@ -1,8 +1,19 @@
 # Pinterest Video & Image Downloader Extension
 
+<div align="center">
+
+[![Stars](https://img.shields.io/github/stars/duytnb79/pinterest-download-extension?style=for-the-badge&color=ff5a5f)](https://github.com/duytnb79/pinterest-download-extension/stargazers)
+[![Forks](https://img.shields.io/github/forks/duytnb79/pinterest-download-extension?style=for-the-badge&color=007ec6)](https://github.com/duytnb79/pinterest-download-extension/network/members)
+[![Issues](https://img.shields.io/github/issues/duytnb79/pinterest-download-extension?style=for-the-badge&color=25a2b8)](https://github.com/duytnb79/pinterest-download-extension/issues)
+[![Downloads](https://img.shields.io/github/downloads/duytnb79/pinterest-download-extension/total?style=for-the-badge&color=4bc51d)](https://github.com/duytnb79/pinterest-download-extension/releases)
+
+<p align="center">
 A modern, premium Chrome Extension to easily download high-quality videos and images from Pinterest directly into custom predefined folders, automatically organized and categorized by tags/hashtags.
+</p>
 
 Developed and maintained by **[Duy Trần (duytnb79)](https://github.com/duytnb79)**.
+
+</div>
 
 ---
 
@@ -84,4 +95,4 @@ For security, Google Chrome restricts downloads to the local `Downloads` directo
 
 This project is developed **strictly for private, educational, and personal backup purposes (Private & Educational Use Only)**. Public redistribution or commercial use is not recommended to ensure compliance with third-party copyright terms and conditions.
 
-Developed by **Duy Trần** - [github.com/duytnb79](https://github.com/duytnb79)
+Developed with ❤️ by **Duy Trần** - [github.com/duytnb79](https://github.com/duytnb79)
