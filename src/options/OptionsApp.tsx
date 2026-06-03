@@ -94,7 +94,7 @@ export const OptionsApp: React.FC = () => {
             <Settings className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-wide uppercase">Pinterest Manager Settings</h1>
+            <h1 className="text-xl font-bold tracking-wide uppercase">Social Media Downloader Settings</h1>
             <p className="text-xs text-app-text-muted">Manage B-Roll directories and automate asset synchronization</p>
           </div>
         </header>

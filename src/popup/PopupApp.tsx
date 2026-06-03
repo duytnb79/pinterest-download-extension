@@ -158,7 +158,7 @@ export const PopupApp: React.FC = () => {
             <ShoppingCart className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="text-xs font-bold tracking-wide">PINTEREST MANAGER</h1>
+            <h1 className="text-xs font-bold tracking-wide">SOCIAL DOWNLOADER</h1>
             <p className="text-[9px] text-app-text-muted">Compact Video Downloader</p>
           </div>
         </div>

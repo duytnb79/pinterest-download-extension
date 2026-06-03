@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Pinterest Downloader & Tag Manager",
-  "description": "Compact premium extension to download and tag Pinterest media for automation.",
+  "name": "Social Media Downloader & Tag Manager",
+  "description": "Compact premium extension to download and tag media from social networks for automation.",
   "version": "0.1.0",
   "icons": {
     "16": "assets/icon16.png",
@@ -11,7 +11,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Pinterest Media Downloader",
+    "default_title": "Social Media Downloader",
     "default_icon": {
       "16": "assets/icon16.png",
       "32": "assets/icon32.png",
